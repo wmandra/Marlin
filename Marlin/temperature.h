@@ -414,7 +414,7 @@ class Temperature {
       #if ENABLED(AUTO_POWER_CONTROL)
         powerManager.power_on();
       #endif
-      target_temperature[HOTEND_INDEX] = MIN(celsius, maxtemp[HOTEND_INDEX] - 15);
+      target_temperature[HOTEND_INDEX] = MIN(celsius, maxttemp[HOTEND_INDEX] - 15);
       #if WATCH_HOTENDS
         start_watching_heater(HOTEND_INDEX);
       #endif
