@@ -1014,6 +1014,7 @@ void gcode_line_error(const char* err, bool doFlush = true) {
   serialprintPGM(err);
   SERIAL_ERRORLN(gcode_LastN);
   //Serial.println(gcode_N);
+  while (MYSERIAL0.read() != -1); // flush RX buffer on line error. see #13018
   if (doFlush) flush_and_request_resend();
   serial_count = 0;
 }
@@ -7874,9 +7875,9 @@ inline void gcode_M42() {
 
     // Enable or disable endstop monitoring
     if (parser.seen('E')) {
-      endstop_monitor_flag = parser.value_bool();
+      endstops.monitor_flag = parser.value_bool();
       SERIAL_PROTOCOLPGM("endstop monitor ");
-      serialprintPGM(endstop_monitor_flag ? PSTR("en") : PSTR("dis"));
+      serialprintPGM(endstops.monitor_flag ? PSTR("en") : PSTR("dis"));
       SERIAL_PROTOCOLLNPGM("abled");
       return;
     }
@@ -8217,7 +8218,7 @@ inline void gcode_M42() {
    *   This has no effect during an SD print job
    */
   inline void gcode_M73() {
-    if (!IS_SD_PRINTING && parser.seen('P')) {
+    if (!IS_SD_PRINTING() && parser.seen('P')) {
       progress_bar_percent = parser.value_byte();
       NOMORE(progress_bar_percent, 100);
     }
@@ -14786,7 +14787,7 @@ void manage_inactivity(const bool ignore_stepper_queue/*=false*/) {
     // ---------------------------------------------------------
     static int homeDebounceCount = 0;   // poor man's debouncing count
     const int HOME_DEBOUNCE_DELAY = 2500;
-    if (!IS_SD_PRINTING && !READ(HOME_PIN)) {
+    if (!IS_SD_PRINTING() && !READ(HOME_PIN)) {
       if (!homeDebounceCount) {
         enqueue_and_echo_commands_P(PSTR("G28"));
         LCD_MESSAGEPGM(MSG_AUTO_HOME);
@@ -15305,6 +15306,7 @@ void loop() {
           #endif
         );
         clear_command_queue();
+		enqueue_and_echo_commands_P(PSTR("G91\nG1 Z10"));
         quickstop_stepper();
         print_job_timer.stop();
         thermalManager.disable_all_heaters();

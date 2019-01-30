@@ -308,6 +308,10 @@ uint8_t Temperature::soft_pwm_amount[HOTENDS];
       return;
     }
 
+	if (target > GHV(BED_MAXTEMP, maxtemp[hotend]) - 15) {
+		SERIAL_ECHOLNPGM(MSG_PID_TEMP_TOO_HIGH);
+	}
+
     SERIAL_ECHOLNPGM(MSG_PID_AUTOTUNE_START);
 
     disable_all_heaters(); // switch off all heaters.

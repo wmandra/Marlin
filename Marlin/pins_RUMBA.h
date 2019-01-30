@@ -50,6 +50,11 @@
 #define Z_MIN_PIN          33
 #define Z_MAX_PIN          32
 
+#if ENABLED(FILAMENT_RUNOUT_SENSOR)
+  #define FIL_RUNOUT_PIN   34
+  #define Y_MAX_PIN        -1
+#endif
+
 //
 // Z Probe (when not Z_MIN_PIN)
 //
@@ -107,7 +112,7 @@
 
 // optional for extruder 4 or chamber:
 //#define TEMP_X_PIN         12   // Analog Input (default connector for thermistor *T3* on rumba board is used)
-//#define TEMP_CHAMBER_PIN   12   // Analog Input (default connector for thermistor *T3* on rumba board is used)
+#define TEMP_CHAMBER_PIN   12   // Analog Input (default connector for thermistor *T3* on rumba board is used)
 
 #if TEMP_SENSOR_BED == -1
   #define TEMP_BED_PIN      7   // Analog Input (connector *K3* on RUMBA thermocouple ADD ON is used <-- this can't be used when TEMP_SENSOR_2 is defined as thermocouple)
@@ -136,7 +141,10 @@
 #define LED_PIN            13
 #define PS_ON_PIN          45
 #define KILL_PIN           46
-#define CASE_LIGHT_PIN     45
+#if ENABLED(CASE_LIGHT_ENABLE)
+  #define CASE_LIGHT_PIN    3
+  #define HEATER_1_PIN     -1
+#endif
 
 //
 // M3/M4/M5 - Spindle/Laser Control
@@ -154,7 +162,9 @@
 //
 // LCD / Controller
 //
-#define SD_DETECT_PIN      49
+#if DISABLED(NO_SD_DETECT)
+  #define SD_DETECT_PIN      49
+#endif
 #define BEEPER_PIN         44
 #define LCD_PINS_D7        40
 #define BTN_EN1            11
