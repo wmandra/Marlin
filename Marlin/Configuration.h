@@ -401,7 +401,7 @@
 #else
   #define TEMP_SENSOR_0 0
 #endif
-#define TEMP_SENSOR_CHAMBER 0
+#define TEMP_SENSOR_CHAMBER 4
 
 // Dummy thermistor constant temperature readings, for use with 998 and 999
 #define DUMMY_THERMISTOR_998_VALUE 25
