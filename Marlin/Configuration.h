@@ -103,6 +103,7 @@
 
 #define CASE_LIGHT_ENABLE // reassigns HEATER_1_PIN to case lights
 #define NO_SD_DETECT // undefines SD_DETECT_PIN
+#define CASE_TEMP_ENABLE
 
 //#define NEW_JERK_CONTROL
 //#define NEW_ACCELERATION_CONTROL
@@ -401,7 +402,12 @@
 #else
   #define TEMP_SENSOR_0 0
 #endif
-#define TEMP_SENSOR_CHAMBER 4
+
+#if ENABLED(CASE_TEMP_ENABLE)
+  #define TEMP_SENSOR_CHAMBER 4
+#else
+  #define TEMP_SENSOR_CHAMBER 0
+#endif
 
 // Dummy thermistor constant temperature readings, for use with 998 and 999
 #define DUMMY_THERMISTOR_998_VALUE 25
@@ -760,7 +766,7 @@
  *
  * See https://github.com/synthetos/TinyG/wiki/Jerk-Controlled-Motion-Explained
  */
- #if ENABLED(NEW_JERK_CONTROL)
+ #if ENABLED(NEW_ACCELERATION_CONTROL)
   #define S_CURVE_ACCELERATION
 #endif
 
