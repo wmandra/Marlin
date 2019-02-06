@@ -75,7 +75,7 @@
 #define COREXY
 #define CUSTOM_MACHINE_NAME "CoreXY"
 
-#define X_BED_SIZE 500
+#define X_BED_SIZE 450
 #define Y_BED_SIZE 400
 #define Z_MAX_POS 450
 
@@ -121,9 +121,9 @@
 //#define SLOWER_HOMING
 #define FAN_FIX
 
-#define MANUAL_MESH_LEVELING
-#define MANUAL_MESH_LEVELING_POINTS 5
-//#define EZABL_ENABLE
+//#define MANUAL_MESH_LEVELING
+//#define MANUAL_MESH_LEVELING_POINTS 5
+#define EZABL_ENABLE
 //#define EZOUT_ENABLE // reassigns Y_MAX_PIN to FIL_RUNOUT_PIN
 
 // EZABL Probe Mounts
@@ -138,7 +138,7 @@
 //#define CUSTOM_X_PROBE_OFFSET_FROM_EXTRUDER 0  // X offset: -left  +right  [of the nozzle]
 //#define CUSTOM_Y_PROBE_OFFSET_FROM_EXTRUDER 0  // Y offset: -front +behind [the nozzle]
 
-#define EZABL_POINTS 3
+#define EZABL_POINTS 5
 #define EZABL_PROBE_EDGE 15
 //#define EZABL_FASTPROBE
 #define EZABL_OUTSIDE_GRID_COMPENSATION
