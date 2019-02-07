@@ -85,7 +85,7 @@
 #define DEFAULT_RETRACT_ACCELERATION  3000    // E acceleration for retracts
 #define DEFAULT_TRAVEL_ACCELERATION   3000    // X, Y, Z acceleration for travel (non printing) moves
 
-#define DEFAULT_XYJERK	10.0
+#define DEFAULT_JERK	10.0
 
 #define INVERT_X_DIR true
 #define INVERT_Y_DIR true
@@ -762,8 +762,8 @@
  * When changing speed and direction, if the difference is less than the
  * value set here, it may happen instantaneously.
  */
-#define DEFAULT_XJERK                 DEFAULT_XYJERK
-#define DEFAULT_YJERK                 DEFAULT_XYJERK
+#define DEFAULT_XJERK                 DEFAULT_JERK
+#define DEFAULT_YJERK                 DEFAULT_JERK
 #define DEFAULT_ZJERK                  0.4
 #define DEFAULT_EJERK                  5.0
 
@@ -775,7 +775,7 @@
  *
  * See https://github.com/synthetos/TinyG/wiki/Jerk-Controlled-Motion-Explained
  */
- #if ENABLED(NEW_ACCELERATION_CONTROL)
+#if ENABLED(NEW_ACCELERATION_CONTROL)
   #define S_CURVE_ACCELERATION
 #endif
 
@@ -899,7 +899,7 @@
  *      O-- FRONT --+
  *    (0,0)
  */
- #if ENABLED(VOLCANO)
+#if ENABLED(VOLCANO)
   #define X_PROBE_OFFSET_FROM_EXTRUDER 30
   #define Y_PROBE_OFFSET_FROM_EXTRUDER 12
 #endif
@@ -1089,7 +1089,7 @@
  * For other boards you may need to define FIL_RUNOUT_PIN, FIL_RUNOUT2_PIN, etc.
  * By default the firmware assumes HIGH=FILAMENT PRESENT.
  */
- #if ENABLED(EZOUT_ENABLE)
+#if ENABLED(EZOUT_ENABLE)
   #define FILAMENT_RUNOUT_SENSOR
 #endif
 #if ENABLED(FILAMENT_RUNOUT_SENSOR)
@@ -1152,7 +1152,7 @@
  * Normally G28 leaves leveling disabled on completion. Enable
  * this option to have G28 restore the prior leveling state.
  */
- #if ENABLED(EZABL_ENABLE) || ENABLED(MANUAL_MESH_LEVELING)
+#if ENABLED(EZABL_ENABLE) || ENABLED(MANUAL_MESH_LEVELING)
   #define RESTORE_LEVELING_AFTER_G28
 #endif
 
@@ -1210,12 +1210,11 @@
   //#define PROBE_Y_FIRST
 
   #if ENABLED(AUTO_BED_LEVELING_BILINEAR)
-
     // Beyond the probed grid, continue the implied tilt?
     // Default is to maintain the height of the nearest edge.
-	#if ENABLED(EZABL_OUTSIDE_GRID_COMPENSATION)
+	  #if ENABLED(EZABL_OUTSIDE_GRID_COMPENSATION)
       #define EXTRAPOLATE_BEYOND_GRID
-	#endif
+	  #endif
 
     //
     // Experimental Subdivision of the grid by Catmull-Rom method.
@@ -1278,7 +1277,7 @@
  * Add a bed leveling sub-menu for ABL or MBL.
  * Include a guided procedure if manual probing is enabled.
  */
- #if ENABLED(MANUAL_MESH_LEVELING)
+#if ENABLED(MANUAL_MESH_LEVELING)
   #define LCD_BED_LEVELING
 #endif
 
@@ -1333,7 +1332,7 @@
 #endif
 
 // Homing speeds (mm/m)
-if ENABLED(SLOWER_HOMING)
+#if ENABLED(SLOWER_HOMING)
   #define HOMING_FEEDRATE_XY (20*60)
 #else
   #define HOMING_FEEDRATE_XY (40*60)
