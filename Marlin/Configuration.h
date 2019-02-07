@@ -78,7 +78,7 @@
 // @section mechanical
 
 #define X_BED_SIZE 450
-#define Y_BED_SIZE 400
+#define Y_BED_SIZE 450
 #define Z_MAX_POS 450
 
 #define DEFAULT_MAX_FEEDRATE          { 500, 500, 15, 50 }
