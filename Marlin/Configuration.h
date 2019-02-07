@@ -85,6 +85,8 @@
 #define DEFAULT_RETRACT_ACCELERATION  3000    // E acceleration for retracts
 #define DEFAULT_TRAVEL_ACCELERATION   3000    // X, Y, Z acceleration for travel (non printing) moves
 
+#define DEFAULT_XYJERK	10.0
+
 #define INVERT_X_DIR true
 #define INVERT_Y_DIR true
 #define INVERT_Z_DIR true
@@ -112,8 +114,8 @@
 #define NO_SD_DETECT // undefines SD_DETECT_PIN
 #define CASE_TEMP_ENABLE
 
-//#define NEW_JERK_CONTROL
-//#define NEW_ACCELERATION_CONTROL
+#define NEW_JERK_CONTROL
+#define NEW_ACCELERATION_CONTROL
 
 //#define LINEAR_ADVANCE
 //#define LINEAR_ADVANCE_K0 0.22
@@ -760,8 +762,8 @@
  * When changing speed and direction, if the difference is less than the
  * value set here, it may happen instantaneously.
  */
-#define DEFAULT_XJERK                 10.0
-#define DEFAULT_YJERK                 10.0
+#define DEFAULT_XJERK                 DEFAULT_XYJERK
+#define DEFAULT_YJERK                 DEFAULT_XYJERK
 #define DEFAULT_ZJERK                  0.4
 #define DEFAULT_EJERK                  5.0
 
@@ -1331,7 +1333,12 @@
 #endif
 
 // Homing speeds (mm/m)
-#define HOMING_FEEDRATE_XY (40*60)
+if ENABLED(SLOWER_HOMING)
+  #define HOMING_FEEDRATE_XY (20*60)
+#else
+  #define HOMING_FEEDRATE_XY (40*60)
+#endif
+
 #if ENABLED(EZABL_FASTPROBE)
   #define HOMING_FEEDRATE_Z  (8*60)
 #else

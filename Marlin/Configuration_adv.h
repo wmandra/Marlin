@@ -459,7 +459,8 @@
   #define JUNCTION_DEVIATION
 #endif
 #if ENABLED(JUNCTION_DEVIATION)
-  #define JUNCTION_DEVIATION_MM 0.02  // (mm) Distance from real junction edge
+  //#define JUNCTION_DEVIATION_MM 0.02  // (mm) Distance from real junction edge
+  #define JUNCTION_DEVIATION_MM 0.4*DEFAULT_XYJERK*DEFAULT_XYJERK/DEFAULT_ACCELERATION
 #endif
 
 /**
