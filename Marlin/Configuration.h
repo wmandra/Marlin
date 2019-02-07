@@ -75,6 +75,8 @@
 #define COREXY
 #define CUSTOM_MACHINE_NAME "CoreXY"
 
+// @section mechanical
+
 #define X_BED_SIZE 450
 #define Y_BED_SIZE 400
 #define Z_MAX_POS 450
@@ -86,6 +88,7 @@
 #define DEFAULT_TRAVEL_ACCELERATION   100    // X, Y, Z acceleration for travel (non printing) moves
 
 #define DEFAULT_JERK	10.0
+#define DEFAULT_JUNCTION_DEVIATION	0.4*DEFAULT_JERK*DEFAULT_JERK/DEFAULT_ACCELERATION // 0.4 * Jerk^2 / Acceleration (used when NEW_JERK_CONTROL / JUNCTION_DEVIATION is enabled)
 
 #define INVERT_X_DIR true
 #define INVERT_Y_DIR true
@@ -110,6 +113,33 @@
 #define Z_MAX_ENDSTOP_INVERTING false  // set to true to invert the logic of the endstop.
 #define Z_MIN_PROBE_ENDSTOP_INVERTING false // set to true to invert the logic of the probe.
 
+#define TITAN_EXTRUDER
+#define TITAN_EXTRUDER_ESTEPS 463
+
+//#define CUSTOM_ESTEPS
+//#define CUSTOM_ESTEPS_VALUE 999
+
+#define XY_FULL_STEPS 400.0
+#define XY_MICROSTEPS 16.0
+#define XY_PULLEY_PITCH 2.0
+#define XY_PULLEY_TEETH 20.0
+
+#define Z_FULL_STEPS 200.0
+#define Z_MICROSTEPS 16.0
+#define Z_ROD_PITCH 8
+#define Z_GEAR_RATIO 2
+
+// @section temperatures
+
+//define V6_HOTEND
+#define TH3D_HOTEND_THERMISTER
+//#define TH3D_BED_THERMISTER
+#define KEENOVO_TEMPSENSOR
+
+#define BED_HIGHTEMP
+
+// @section features
+
 #define CASE_LIGHT_ENABLE // reassigns HEATER_1_PIN to case lights
 #define NO_SD_DETECT // undefines SD_DETECT_PIN
 #define CASE_TEMP_ENABLE
@@ -123,10 +153,13 @@
 //#define SLOWER_HOMING
 #define FAN_FIX
 
+//#define EZOUT_ENABLE // reassigns Y_MAX_PIN to FIL_RUNOUT_PIN
+
+// @section leveling
+
 //#define MANUAL_MESH_LEVELING
 //#define MANUAL_MESH_LEVELING_POINTS 5
 #define EZABL_ENABLE
-//#define EZOUT_ENABLE // reassigns Y_MAX_PIN to FIL_RUNOUT_PIN
 
 // EZABL Probe Mounts
 //#define OEM
@@ -144,29 +177,6 @@
 #define EZABL_PROBE_EDGE 15
 //#define EZABL_FASTPROBE
 #define EZABL_OUTSIDE_GRID_COMPENSATION
-
-#define TITAN_EXTRUDER
-#define TITAN_EXTRUDER_ESTEPS 463
-
-//#define CUSTOM_ESTEPS
-//#define CUSTOM_ESTEPS_VALUE 999
-
-//define V6_HOTEND
-#define TH3D_HOTEND_THERMISTER
-//#define TH3D_BED_THERMISTER
-#define KEENOVO_TEMPSENSOR
-
-#define BED_HIGHTEMP
-
-#define XY_FULL_STEPS 400.0
-#define XY_MICROSTEPS 16.0
-#define XY_PULLEY_PITCH 2.0
-#define XY_PULLEY_TEETH 20.0
-
-#define Z_FULL_STEPS 200.0
-#define Z_MICROSTEPS 16.0
-#define Z_ROD_PITCH 8
-#define Z_GEAR_RATIO 2
 
 /**
  * *** VENDORS PLEASE READ ***
