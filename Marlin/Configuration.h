@@ -79,7 +79,7 @@
 
 #define X_BED_SIZE 450
 #define Y_BED_SIZE 450
-#define Z_MAX_POS 450
+#define Z_MAX_POS  450
 
 #define DEFAULT_MAX_FEEDRATE          { 250, 250, 15, 100 }
 #define DEFAULT_MAX_ACCELERATION      { 3000, 3000, 200, 10000 }
@@ -87,8 +87,8 @@
 #define DEFAULT_RETRACT_ACCELERATION  3000    // E acceleration for retracts
 #define DEFAULT_TRAVEL_ACCELERATION   100    // X, Y, Z acceleration for travel (non printing) moves
 
-#define DEFAULT_JERK	10.0
-#define DEFAULT_JUNCTION_DEVIATION	0.4*DEFAULT_JERK*DEFAULT_JERK/DEFAULT_ACCELERATION 
+#define DEFAULT_JERK  10.0
+#define DEFAULT_JUNCTION_DEVIATION  0.4*DEFAULT_JERK*DEFAULT_JERK/DEFAULT_ACCELERATION 
 // 0.4 * Jerk^2 / Acceleration (used when NEW_JERK_CONTROL / JUNCTION_DEVIATION is enabled)
 // See http://blog.kyneticcnc.com/2018/10/computing-junction-deviation-for-marlin.html
 
@@ -775,8 +775,8 @@
  * When changing speed and direction, if the difference is less than the
  * value set here, it may happen instantaneously.
  */
-#define DEFAULT_XJERK                 DEFAULT_JERK
-#define DEFAULT_YJERK                 DEFAULT_JERK
+#define DEFAULT_XJERK                  DEFAULT_JERK
+#define DEFAULT_YJERK                  DEFAULT_JERK
 #define DEFAULT_ZJERK                  0.4
 #define DEFAULT_EJERK                  5.0
 
@@ -978,16 +978,16 @@
  * Example: `M851 Z-5` with a CLEARANCE of 4  =>  9mm from bed to nozzle.
  *     But: `M851 Z+1` with a CLEARANCE of 2  =>  2mm from bed to nozzle.
  */
-#define Z_CLEARANCE_DEPLOY_PROBE   5 // Z Clearance for Deploy/Stow
+#define Z_CLEARANCE_DEPLOY_PROBE    5 // Z Clearance for Deploy/Stow
 #define Z_CLEARANCE_BETWEEN_PROBES  3 // Z Clearance between probe points
 #define Z_CLEARANCE_MULTI_PROBE     5 // Z Clearance between multiple probes
-#define Z_AFTER_PROBING           5 // Z position after probing is done
+#define Z_AFTER_PROBING             5 // Z position after probing is done
 
 #define Z_PROBE_LOW_POINT          -3 // Farthest distance below the trigger-point to go before stopping
 
 // For M851 give a range for adjusting the Z probe offset
 #define Z_PROBE_OFFSET_RANGE_MIN -5
-#define Z_PROBE_OFFSET_RANGE_MAX 1
+#define Z_PROBE_OFFSET_RANGE_MAX  1
 
 // Enable the M48 repeatability test to test probe accuracy
 #if ENABLED(EZABL_ENABLE)
@@ -1102,10 +1102,10 @@
   #define FILAMENT_RUNOUT_SENSOR
 #endif
 #if ENABLED(FILAMENT_RUNOUT_SENSOR)
-  #define NUM_RUNOUT_SENSORS   1     // Number of sensors, up to one per extruder. Define a FIL_RUNOUT#_PIN for each.
-  #define FIL_RUNOUT_PIN 34 // Reuse Y Max ??
-  #define FIL_RUNOUT_INVERTING false // set to true to invert the logic of the sensor.
-  #define FIL_RUNOUT_PULLUP          // Use internal pullup for filament runout pins.
+  #define NUM_RUNOUT_SENSORS         1 // Number of sensors, up to one per extruder. Define a FIL_RUNOUT#_PIN for each.
+  #define FIL_RUNOUT_PIN            34 // Reuse Y Max ??
+  #define FIL_RUNOUT_INVERTING   false // set to true to invert the logic of the sensor.
+  #define FIL_RUNOUT_PULLUP            // Use internal pullup for filament runout pins.
   #define FILAMENT_RUNOUT_SCRIPT "M600"
 #endif
 
@@ -1209,10 +1209,10 @@
 
   // Set the boundaries for probing (where the probe can reach).
   #if ENABLED(EZABL_ENABLE)
-    #define LEFT_PROBE_BED_POSITION (max(EZABL_PROBE_EDGE, X_PROBE_OFFSET_FROM_EXTRUDER))
+    #define LEFT_PROBE_BED_POSITION  (max(EZABL_PROBE_EDGE, X_PROBE_OFFSET_FROM_EXTRUDER))
     #define RIGHT_PROBE_BED_POSITION (min(X_BED_SIZE - EZABL_PROBE_EDGE, X_BED_SIZE + X_PROBE_OFFSET_FROM_EXTRUDER))
     #define FRONT_PROBE_BED_POSITION (max(EZABL_PROBE_EDGE, Y_PROBE_OFFSET_FROM_EXTRUDER))
-    #define BACK_PROBE_BED_POSITION (min(Y_BED_SIZE - EZABL_PROBE_EDGE, Y_BED_SIZE + Y_PROBE_OFFSET_FROM_EXTRUDER))
+    #define BACK_PROBE_BED_POSITION  (min(Y_BED_SIZE - EZABL_PROBE_EDGE, Y_BED_SIZE + Y_PROBE_OFFSET_FROM_EXTRUDER))
   #endif
 
   // Probe along the Y axis, advancing X after each column
@@ -1221,9 +1221,9 @@
   #if ENABLED(AUTO_BED_LEVELING_BILINEAR)
     // Beyond the probed grid, continue the implied tilt?
     // Default is to maintain the height of the nearest edge.
-	  #if ENABLED(EZABL_OUTSIDE_GRID_COMPENSATION)
+    #if ENABLED(EZABL_OUTSIDE_GRID_COMPENSATION)
       #define EXTRAPOLATE_BEYOND_GRID
-	  #endif
+    #endif
 
     //
     // Experimental Subdivision of the grid by Catmull-Rom method.

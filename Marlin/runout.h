@@ -41,7 +41,7 @@
 class FilamentRunoutSensor {
   public:
     static bool filament_ran_out;
-	  static bool enabled;
+    static bool enabled;
 
     FilamentRunoutSensor() {}
 
@@ -50,35 +50,35 @@ class FilamentRunoutSensor {
     FORCE_INLINE static void reset() { runout_count = 0; filament_ran_out = false; }
 
     FORCE_INLINE static void run() {
-	    if (!enabled) return; // detection disabled
+      if (!enabled) return; // detection disabled
 
-	    // print running. trigger runout script
-	    if ((IS_SD_PRINTING() || print_job_timer.isRunning()) && check() && !filament_ran_out) {
-	      filament_ran_out = true;
-		    enqueue_and_echo_commands_P(PSTR(FILAMENT_RUNOUT_SCRIPT));
+      // print running. trigger runout script
+      if ((IS_SD_PRINTING() || print_job_timer.isRunning()) && check() && !filament_ran_out) {
+        filament_ran_out = true;
+        enqueue_and_echo_commands_P(PSTR(FILAMENT_RUNOUT_SCRIPT));
         planner.synchronize();
-	    }
-	    else {
-	      // not printing, just toggle filament_ran_out
-		    if (!filament_ran_out && check()) {
-			    filament_ran_out = true;
-                #if ENABLED(ULTRA_LCD)
-				  lcd_reset_status();
-				#endif
-		    }
-		    else if (filament_ran_out && !is_out()) {
-			    reset();
-				#if ENABLED(ULTRA_LCD)
-				  lcd_reset_status();
-				#endif
-		    }
-	    }
+      }
+      else {
+        // not printing, just toggle filament_ran_out
+        if (!filament_ran_out && check()) {
+          filament_ran_out = true;
+          #if ENABLED(ULTRA_LCD)
+            lcd_reset_status();
+          #endif
+        }
+        else if (filament_ran_out && !is_out()) {
+          reset();
+          #if ENABLED(ULTRA_LCD)
+            lcd_reset_status();
+          #endif
+        }
+      }
     }
 
   private:
     static uint8_t runout_count;
 
-	FORCE_INLINE static bool is_out() {
+  FORCE_INLINE static bool is_out() {
       #if NUM_RUNOUT_SENSORS < 2
         // A single sensor applying to all extruders
         return READ(FIL_RUNOUT_PIN) == FIL_RUNOUT_INVERTING;

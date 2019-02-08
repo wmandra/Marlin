@@ -308,9 +308,9 @@ uint8_t Temperature::soft_pwm_amount[HOTENDS];
       return;
     }
 
-	if (target > GHV(BED_MAXTEMP, maxttemp[hotend]) - 15) {
-		SERIAL_ECHOLNPGM(MSG_PID_TEMP_TOO_HIGH);
-	}
+    if (target > GHV(BED_MAXTEMP, maxttemp[hotend]) - 15) {
+      SERIAL_ECHOLNPGM(MSG_PID_TEMP_TOO_HIGH);
+    }
 
     SERIAL_ECHOLNPGM(MSG_PID_AUTOTUNE_START);
 

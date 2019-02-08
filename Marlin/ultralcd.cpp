@@ -1837,11 +1837,11 @@ void lcd_quick_feedback(const bool clear_buttons) {
 
   #if ENABLED(LEVEL_BED_CORNERS)
 
-	#ifndef LEVEL_CORNERS_Z_HOP
-	  #define LEVEL_CORNERS_Z_HOP 4.0
-	#endif
+  #ifndef LEVEL_CORNERS_Z_HOP
+    #define LEVEL_CORNERS_Z_HOP 4.0
+  #endif
 
-	static_assert(LEVEL_CORNERS_Z_HOP >= 0, "LEVEL_CORNERS_Z_HOP must be >= 0. Please update your configuration.");
+  static_assert(LEVEL_CORNERS_Z_HOP >= 0, "LEVEL_CORNERS_Z_HOP must be >= 0. Please update your configuration.");
 
     /**
      * Level corners, starting in the front-left corner.

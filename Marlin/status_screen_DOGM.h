@@ -264,7 +264,7 @@ static void lcd_implementation_status_screen() {
       _draw_heater_status(STATUS_SCREEN_BED_TEXT_X, -1, blink);
     #endif
 
-	// Chamber temp
+  // Chamber temp
     #if HOTENDS < 3 && TEMP_SENSOR_CHAMBER > 0
       _draw_centered_temp(thermalManager.current_temperature_chamber + 0.5, 8, 28);
     #endif
