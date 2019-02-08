@@ -88,7 +88,9 @@
 #define DEFAULT_TRAVEL_ACCELERATION   100    // X, Y, Z acceleration for travel (non printing) moves
 
 #define DEFAULT_JERK	10.0
-#define DEFAULT_JUNCTION_DEVIATION	0.4*DEFAULT_JERK*DEFAULT_JERK/DEFAULT_ACCELERATION // 0.4 * Jerk^2 / Acceleration (used when NEW_JERK_CONTROL / JUNCTION_DEVIATION is enabled)
+#define DEFAULT_JUNCTION_DEVIATION	0.4*DEFAULT_JERK*DEFAULT_JERK/DEFAULT_ACCELERATION 
+// 0.4 * Jerk^2 / Acceleration (used when NEW_JERK_CONTROL / JUNCTION_DEVIATION is enabled)
+// See http://blog.kyneticcnc.com/2018/10/computing-junction-deviation-for-marlin.html
 
 #define INVERT_X_DIR true
 #define INVERT_Y_DIR true
