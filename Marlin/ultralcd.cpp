@@ -65,6 +65,10 @@
   #include "power_loss_recovery.h"
 #endif
 
+#if ENABLED(FILAMENT_RUNOUT_SENSOR)
+  #include "runout.h"
+#endif
+
 #if ENABLED(STATUS_MESSAGE_SCROLLING)
   #if LONG_FILENAME_LENGTH > CHARSIZE * 2 * (LCD_WIDTH)
     #define MAX_MESSAGE_LENGTH LONG_FILENAME_LENGTH
@@ -751,6 +755,9 @@ void lcd_reset_status() {
   static const char paused[] PROGMEM = MSG_PRINT_PAUSED;
   static const char printing[] PROGMEM = MSG_PRINTING;
   static const char welcome[] PROGMEM = WELCOME_MSG;
+  #if ENABLED(FILAMENT_RUNOUT_SENSOR)
+   static const char nofilament[] PROGMEM = MSG_NO_FILAMENT;
+  #endif
   const char *msg;
   if (print_job_timer.isPaused())
     msg = paused;
@@ -760,6 +767,10 @@ void lcd_reset_status() {
   #endif
   else if (print_job_timer.isRunning())
     msg = printing;
+  #if ENABLED(FILAMENT_RUNOUT_SENSOR)
+  else if (runout.filament_ran_out)
+    msg = nofilament;
+  #endif
   else
     msg = welcome;
 

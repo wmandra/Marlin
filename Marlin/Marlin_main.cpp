@@ -10465,6 +10465,24 @@ inline void gcode_M400() { planner.synchronize(); }
 
 #endif // FILAMENT_WIDTH_SENSOR
 
+#if ENABLED(FILAMENT_RUNOUT_SENSOR)
+/**
+ * M412: Enable / Disable filament runout detection
+  */
+inline void gcode_M412() {
+  if (parser.seen('S')) {
+    runout.reset();
+	runout.enabled = parser.value_bool();
+  }
+  else {
+    // Report current state
+    SERIAL_ECHO_START();
+    SERIAL_ECHOLNPAIR("Filament runout ", (runout.enabled ? "ON" : "OFF"));
+  }
+}
+
+#endif // FILAMENT_RUNOUT_SENSOR
+
 void quickstop_stepper() {
   planner.quick_stop();
   planner.synchronize();
@@ -12999,6 +13017,10 @@ void process_parsed_command() {
         case 406: gcode_M406(); break;                            // M406: Disable Filament Width Sensor
         case 407: gcode_M407(); break;                            // M407: Report Measured Filament Width
       #endif
+
+	  #if ENABLED(FILAMENT_RUNOUT_SENSOR)
+	    case 412: gcode_M412(); break;                            // M412: Filament Runout Sensor
+	  #endif
 
       #if HAS_LEVELING
         case 420: gcode_M420(); break;                            // M420: Set Bed Leveling Enabled / Fade

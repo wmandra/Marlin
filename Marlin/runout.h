@@ -38,6 +38,9 @@
 
 class FilamentRunoutSensor {
   public:
+    static bool filament_ran_out;
+	static bool enabled;
+
     FilamentRunoutSensor() {}
 
     static void setup();
@@ -45,14 +48,16 @@ class FilamentRunoutSensor {
     FORCE_INLINE static void reset() { runout_count = 0; filament_ran_out = false; }
 
     FORCE_INLINE static void run() {
-      if ((IS_SD_PRINTING() || print_job_timer.isRunning()) && check() && !filament_ran_out) {
-        filament_ran_out = true;
-        enqueue_and_echo_commands_P(PSTR(FILAMENT_RUNOUT_SCRIPT));
-        planner.synchronize();
-      }
+	  if (enabled && !filament_ran_out && (IS_SD_PRINTING() || print_job_timer.isRunning())) {
+	    if (check()) {
+		  filament_ran_out = true;
+		  enqueue_and_echo_commands_P(PSTR(FILAMENT_RUNOUT_SCRIPT));
+          planner.synchronize();
+		}
+	  }
+
     }
   private:
-    static bool filament_ran_out;
     static uint8_t runout_count;
 
     FORCE_INLINE static bool check() {

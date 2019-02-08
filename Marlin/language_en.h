@@ -43,6 +43,9 @@
 #ifndef WELCOME_MSG
   #define WELCOME_MSG                         MACHINE_NAME _UxGT(" Ready.")
 #endif
+#ifndef NO_FILAMENT
+  #define MSG_NO_FILAMENT                     MACHINE_NAME _UxGT(" No Filament.")
+#endif
 #ifndef MSG_BACK
   #define MSG_BACK                            _UxGT("Back")
 #endif
