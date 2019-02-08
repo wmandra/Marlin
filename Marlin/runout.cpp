@@ -58,7 +58,6 @@ void FilamentRunoutSensor::setup() {
     #endif
   #endif
 
-  filament_ran_out = check();
 }
 
 #endif // FILAMENT_RUNOUT_SENSOR

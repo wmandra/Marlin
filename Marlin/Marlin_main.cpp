@@ -15225,6 +15225,10 @@ void setup() {
     fanmux_init();
   #endif
 
+  #if ENABLED(FILAMENT_RUNOUT_SENSOR)
+    runout.run();
+  #endif
+  
   lcd_init();
   lcd_reset_status();
 
