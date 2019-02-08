@@ -1,4 +1,4 @@
-/**
+ /**
  * Marlin 3D Printer Firmware
  * Copyright (C) 2016 MarlinFirmware [https://github.com/MarlinFirmware/Marlin]
  *
@@ -156,7 +156,7 @@
 //#define SLOWER_HOMING
 #define FAN_FIX
 
-//#define EZOUT_ENABLE // reassigns Y_MAX_PIN to FIL_RUNOUT_PIN
+#define EZOUT_ENABLE // reassigns Y_MAX_PIN to FIL_RUNOUT_PIN
 
 // @section leveling
 
@@ -570,15 +570,15 @@
  *
  * *** IT IS HIGHLY RECOMMENDED TO LEAVE THIS OPTION ENABLED! ***
  */
-//#define PREVENT_COLD_EXTRUSION
-//#define EXTRUDE_MINTEMP 170
+#define PREVENT_COLD_EXTRUSION
+#define EXTRUDE_MINTEMP 170
 
 /**
  * Prevent a single extrusion longer than EXTRUDE_MAXLENGTH.
  * Note: For Bowden Extruders make this large enough to allow load/unload.
  */
-//#define PREVENT_LENGTHY_EXTRUDE
-//#define EXTRUDE_MAXLENGTH 1000
+#define PREVENT_LENGTHY_EXTRUDE
+#define EXTRUDE_MAXLENGTH 1000
 
 //===========================================================================
 //======================== Thermal Runaway Protection =======================
