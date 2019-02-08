@@ -48,15 +48,25 @@ class FilamentRunoutSensor {
     FORCE_INLINE static void reset() { runout_count = 0; filament_ran_out = false; }
 
     FORCE_INLINE static void run() {
-	  if (enabled && !filament_ran_out && (IS_SD_PRINTING() || print_job_timer.isRunning())) {
-	    if (check()) {
-		  filament_ran_out = true;
-		  enqueue_and_echo_commands_P(PSTR(FILAMENT_RUNOUT_SCRIPT));
-          planner.synchronize();
+	  if (!enabled) return; // detection disabled
+
+	  // print running. trigger runout script
+	  if ((IS_SD_PRINTING() || print_job_timer.isRunning()) && check() && !filament_ran_out) {
+	    filament_ran_out = true;
+		enqueue_and_echo_commands_P(PSTR(FILAMENT_RUNOUT_SCRIPT));
+        planner.synchronize();
+	  }
+	  else {
+	    // not printing, just toggle filament_ran_out
+		if (!filament_ran_out && check()) {
+			filament_ran_out = true;
+		}
+		else if (filament_ran_out && !check()) {
+			reset();
 		}
 	  }
-
     }
+
   private:
     static uint8_t runout_count;
 
