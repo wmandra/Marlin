@@ -78,7 +78,7 @@
 // @section mechanical
 
 #define X_BED_SIZE 450
-#define Y_BED_SIZE 400
+#define Y_BED_SIZE 450
 #define Z_MAX_POS 450
 
 #define DEFAULT_MAX_FEEDRATE          { 500, 500, 15, 50 }
@@ -116,7 +116,7 @@
 #define Z_MIN_PROBE_ENDSTOP_INVERTING false // set to true to invert the logic of the probe.
 
 #define TITAN_EXTRUDER
-#define TITAN_EXTRUDER_ESTEPS 463
+#define TITAN_EXTRUDER_ESTEPS 430
 
 //#define CUSTOM_ESTEPS
 //#define CUSTOM_ESTEPS_VALUE 999
@@ -569,15 +569,15 @@
  *
  * *** IT IS HIGHLY RECOMMENDED TO LEAVE THIS OPTION ENABLED! ***
  */
-#define PREVENT_COLD_EXTRUSION
-#define EXTRUDE_MINTEMP 170
+//#define PREVENT_COLD_EXTRUSION
+//#define EXTRUDE_MINTEMP 170
 
 /**
  * Prevent a single extrusion longer than EXTRUDE_MAXLENGTH.
  * Note: For Bowden Extruders make this large enough to allow load/unload.
  */
-#define PREVENT_LENGTHY_EXTRUDE
-#define EXTRUDE_MAXLENGTH 1000
+//#define PREVENT_LENGTHY_EXTRUDE
+//#define EXTRUDE_MAXLENGTH 1000
 
 //===========================================================================
 //======================== Thermal Runaway Protection =======================
@@ -1023,11 +1023,7 @@
 // @section extruder
 
 // For direct drive extruder v9 set to true, for geared extruder set to false.
-#if ENABLED(TITAN_EXTRUDER)
-  #define INVERT_E0_DIR true
-#else
-  #define INVERT_E0_DIR false
-#endif
+#define INVERT_E0_DIR false
 #define INVERT_E1_DIR false
 #define INVERT_E2_DIR false
 #define INVERT_E3_DIR false
