@@ -58,7 +58,7 @@ void FilamentRunoutSensor::setup() {
     #endif
   #endif
 
-  filament_ran_out = READ(FIL_RUNOUT_PIN) == FIL_RUNOUT_INVERTING;
+  filament_ran_out = is_out();
 }
 
 #endif // FILAMENT_RUNOUT_SENSOR
