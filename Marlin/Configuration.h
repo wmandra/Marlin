@@ -117,6 +117,7 @@
 
 #define TITAN_EXTRUDER
 #define TITAN_EXTRUDER_ESTEPS 430
+// motor steps * microsteps * gear ratio / (hobbed gear diameter * pi)
 
 //#define CUSTOM_ESTEPS
 //#define CUSTOM_ESTEPS_VALUE 999
@@ -161,7 +162,12 @@
 
 //#define MANUAL_MESH_LEVELING
 //#define MANUAL_MESH_LEVELING_POINTS 5
+
 #define EZABL_ENABLE
+#define EZABL_POINTS 5
+#define EZABL_PROBE_EDGE 15
+//#define EZABL_FASTPROBE
+#define EZABL_OUTSIDE_GRID_COMPENSATION
 
 // EZABL Probe Mounts
 //#define OEM
@@ -174,11 +180,6 @@
 //#define CUSTOM_PROBE
 //#define CUSTOM_X_PROBE_OFFSET_FROM_EXTRUDER 0  // X offset: -left  +right  [of the nozzle]
 //#define CUSTOM_Y_PROBE_OFFSET_FROM_EXTRUDER 0  // Y offset: -front +behind [the nozzle]
-
-#define EZABL_POINTS 5
-#define EZABL_PROBE_EDGE 15
-//#define EZABL_FASTPROBE
-#define EZABL_OUTSIDE_GRID_COMPENSATION
 
 /**
  * *** VENDORS PLEASE READ ***
