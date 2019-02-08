@@ -81,7 +81,7 @@
 #define Y_BED_SIZE 450
 #define Z_MAX_POS 450
 
-#define DEFAULT_MAX_FEEDRATE          { 500, 500, 15, 50 }
+#define DEFAULT_MAX_FEEDRATE          { 500, 500, 15, 100 }
 #define DEFAULT_MAX_ACCELERATION      { 1000, 1000, 200, 10000 }
 #define DEFAULT_ACCELERATION          100    // X, Y, Z and E acceleration for printing moves
 #define DEFAULT_RETRACT_ACCELERATION  3000    // E acceleration for retracts
