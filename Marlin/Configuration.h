@@ -81,9 +81,9 @@
 #define Y_BED_SIZE 450
 #define Z_MAX_POS 450
 
-#define DEFAULT_MAX_FEEDRATE          { 500, 500, 15, 100 }
-#define DEFAULT_MAX_ACCELERATION      { 1000, 1000, 200, 10000 }
-#define DEFAULT_ACCELERATION          100    // X, Y, Z and E acceleration for printing moves
+#define DEFAULT_MAX_FEEDRATE          { 250, 250, 15, 100 }
+#define DEFAULT_MAX_ACCELERATION      { 3000, 3000, 200, 10000 }
+#define DEFAULT_ACCELERATION          1000    // X, Y, Z and E acceleration for printing moves
 #define DEFAULT_RETRACT_ACCELERATION  3000    // E acceleration for retracts
 #define DEFAULT_TRAVEL_ACCELERATION   100    // X, Y, Z acceleration for travel (non printing) moves
 
@@ -951,7 +951,7 @@
 #define MIN_PROBE_EDGE 5
 
 // X and Y axis travel speed (mm/m) between probes
-#define XY_PROBE_SPEED 12000
+#define XY_PROBE_SPEED 9000
 
 // Feedrate (mm/m) for the first approach when double-probing (MULTIPLE_PROBING == 2)
 #define Z_PROBE_SPEED_FAST HOMING_FEEDRATE_Z
