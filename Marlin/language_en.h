@@ -1011,6 +1011,12 @@
 #ifndef MSG_M600_TOO_COLD
   #define MSG_M600_TOO_COLD                   _UxGT("M600: Too cold")
 #endif
+#ifndef MSG_SERVICE
+   #define MSG_SERVICE                        _UxGT("Service")
+#endif
+#ifndef MSG_SERVICE_RESET
+  #define MSG_SERVICE_RESET                   _UxGT("Reset")
+#endif
 
 //
 // Filament Change screens show up to 3 lines on a 4-line display

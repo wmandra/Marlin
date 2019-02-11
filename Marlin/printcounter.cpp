@@ -33,16 +33,35 @@ Stopwatch print_job_timer;      // Global Print Job Timer instance
 #include "duration_t.h"
 #include "Marlin.h"
 
-PrintCounter print_job_timer;   // Global Print Job Timer instance
-
-#if ENABLED(I2C_EEPROM) || ENABLED(SPI_EEPROM)
-  // round up address to next page boundary (assuming 32 byte pages)
-  #define STATS_EEPROM_ADDRESS 0x40
-#else
-  #define STATS_EEPROM_ADDRESS 0x32
+#if HAS_BUZZER && SERVICE_WARNING_BUZZES > 0
+  #include "buzzer.h"
+#endif
+#if ENABLED(ULTRA_LCD)
+  #include "ultralcd.h"
 #endif
 
-const PrintCounter::promdress PrintCounter::address = STATS_EEPROM_ADDRESS;
+// Service intervals
+#if HAS_SERVICE_INTERVALS
+  #ifdef SERVICE_INTERVAL_1
+    #define SERVICE_INTERVAL_1_SEC    (3600UL * SERVICE_INTERVAL_1)
+  #else
+    #define SERVICE_INTERVAL_1_SEC    (3600UL * 100)
+  #endif
+  #ifdef SERVICE_INTERVAL_2
+    #define SERVICE_INTERVAL_2_SEC    (3600UL * SERVICE_INTERVAL_2)
+  #else
+    #define SERVICE_INTERVAL_2_SEC    (3600UL * 100)
+  #endif
+  #ifdef SERVICE_INTERVAL_3
+    #define SERVICE_INTERVAL_3_SEC    (3600UL * SERVICE_INTERVAL_3)
+  #else
+    #define SERVICE_INTERVAL_3_SEC    (3600UL * 100)
+  #endif
+#endif
+
+PrintCounter print_job_timer;   // Global Print Job Timer instance
+
+const PrintCounter::eeprom_address_t PrintCounter::address = STATS_EEPROM_ADDRESS;
 
 const uint16_t PrintCounter::updateInterval = 10;
 const uint16_t PrintCounter::saveInterval = 3600;
@@ -77,11 +96,27 @@ void PrintCounter::initStats() {
   #endif
 
   loaded = true;
-  data = { 0, 0, 0, 0, 0.0 };
+  data = { 0, 0, 0, 0, 0.0
+    #if HAS_SERVICE_INTERVALS
+      , SERVICE_INTERVAL_1_SEC, SERVICE_INTERVAL_2_SEC, SERVICE_INTERVAL_3_SEC
+    #endif
+  };
 
   saveStats();
   eeprom_write_byte((uint8_t*)address, 0x16);
 }
+
+#if HAS_SERVICE_INTERVALS
+  inline void _print_divider() { SERIAL_ECHO_MSG("============================================="); }
+  inline bool _service_warn(const char * const msg) {
+    _print_divider();
+    SERIAL_ECHO_START();
+    serialprintPGM(msg);
+    SERIAL_ECHOLNPGM("!");
+    _print_divider();
+    return true;
+  }
+#endif
 
 void PrintCounter::loadStats() {
   #if ENABLED(DEBUG_PRINTCOUNTER)
@@ -94,6 +129,22 @@ void PrintCounter::loadStats() {
     (void*)(address + sizeof(uint8_t)), sizeof(printStatistics));
 
   loaded = true;
+
+  #if HAS_SERVICE_INTERVALS
+    bool doBuzz = false;
+    #ifdef SERVICE_INTERVAL_1
+      if (data.nextService1 == 0) doBuzz = _service_warn(PSTR(" " SERVICE_NAME_1));
+    #endif
+    #ifdef SERVICE_INTERVAL_2
+      if (data.nextService2 == 0) doBuzz = _service_warn(PSTR(" " SERVICE_NAME_2));
+    #endif
+    #ifdef SERVICE_INTERVAL_3
+      if (data.nextService3 == 0) doBuzz = _service_warn(PSTR(" " SERVICE_NAME_3));
+    #endif
+    #if HAS_BUZZER && SERVICE_WARNING_BUZZES > 0
+      if (doBuzz) for (int i = 0; i < SERVICE_WARNING_BUZZES; i++) lcd_buzz(200, 404);
+    #endif
+  #endif // HAS_SERVICE_INTERVALS
 }
 
 void PrintCounter::saveStats() {
@@ -108,6 +159,16 @@ void PrintCounter::saveStats() {
   eeprom_update_block(&data,
     (void*)(address + sizeof(uint8_t)), sizeof(printStatistics));
 }
+
+#if HAS_SERVICE_INTERVALS
+  inline void _service_when(char buffer[], const char * const msg, const uint32_t when) {
+    duration_t elapsed = when;
+    elapsed.toString(buffer);
+    SERIAL_ECHOPGM(MSG_STATS);
+    serialprintPGM(msg);
+    SERIAL_ECHOLNPAIR(" in ", buffer);
+  }
+#endif
 
 void PrintCounter::showStats() {
   char buffer[21];
@@ -159,32 +220,47 @@ void PrintCounter::showStats() {
   SERIAL_CHAR('m');
 
   SERIAL_EOL();
+
+  #ifdef SERVICE_INTERVAL_1
+    _service_when(buffer, PSTR(SERVICE_NAME_1), data.nextService1);
+  #endif
+  #ifdef SERVICE_INTERVAL_2
+    _service_when(buffer, PSTR(SERVICE_NAME_2), data.nextService2);
+  #endif
+  #ifdef SERVICE_INTERVAL_3
+    _service_when(buffer, PSTR(SERVICE_NAME_3), data.nextService3);
+  #endif
 }
 
 void PrintCounter::tick() {
   if (!isRunning()) return;
 
-  static uint32_t update_last = millis(),
-                  eeprom_last = millis();
-
   millis_t now = millis();
 
-  // Trying to get the amount of calculations down to the bare min
-  const static uint16_t i = updateInterval * 1000;
-
-  if (now - update_last >= i) {
+  static uint32_t update_next; // = 0
+  if (ELAPSED(now, update_next)) {
     #if ENABLED(DEBUG_PRINTCOUNTER)
       debug(PSTR("tick"));
     #endif
+    millis_t delta = deltaDuration();
+    data.printTime += delta;
 
-    data.printTime += deltaDuration();
-    update_last = now;
+    #ifdef SERVICE_INTERVAL_1
+      data.nextService1 -= MIN(delta, data.nextService1);
+    #endif
+    #ifdef SERVICE_INTERVAL_2
+      data.nextService2 -= MIN(delta, data.nextService2);
+    #endif
+    #ifdef SERVICE_INTERVAL_3
+      data.nextService3 -= MIN(delta, data.nextService3);
+    #endif
+
+    update_next = now + updateInterval * 1000;
   }
 
-  // Trying to get the amount of calculations down to the bare min
-  const static millis_t j = saveInterval * 1000;
-  if (now - eeprom_last >= j) {
-    eeprom_last = now;
+  static uint32_t eeprom_next; // = 0
+  if (ELAPSED(now, eeprom_next)) {
+    eeprom_next = now + saveInterval * 1000;
     saveStats();
   }
 }
@@ -236,6 +312,40 @@ void PrintCounter::reset() {
   super::reset();
   lastDuration = 0;
 }
+
+#if HAS_SERVICE_INTERVALS
+
+  void PrintCounter::resetServiceInterval(const int index) {
+    switch (index) {
+      #ifdef SERVICE_INTERVAL_1
+        case 1: data.nextService1 = SERVICE_INTERVAL_1_SEC;
+      #endif
+      #ifdef SERVICE_INTERVAL_2
+        case 2: data.nextService2 = SERVICE_INTERVAL_2_SEC;
+      #endif
+      #ifdef SERVICE_INTERVAL_3
+        case 3: data.nextService3 = SERVICE_INTERVAL_3_SEC;
+      #endif
+    }
+    saveStats();
+  }
+
+  bool PrintCounter::needsService(const int index) {
+    switch (index) {
+      #ifdef SERVICE_INTERVAL_1
+        case 1: return data.nextService1 == 0;
+      #endif
+      #ifdef SERVICE_INTERVAL_2
+        case 2: return data.nextService2 == 0;
+      #endif
+      #ifdef SERVICE_INTERVAL_3
+        case 3: return data.nextService3 == 0;
+      #endif
+      default: return false;
+    }
+  }
+
+#endif // HAS_SERVICE_INTERVALS
 
 #if ENABLED(DEBUG_PRINTCOUNTER)
 

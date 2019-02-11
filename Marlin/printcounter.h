@@ -31,6 +31,15 @@
 #include "stopwatch.h"
 #include <avr/eeprom.h>
 
+#if ENABLED(I2C_EEPROM) || ENABLED(SPI_EEPROM)
+  // round up address to next page boundary (assuming 32 byte pages)
+  #define STATS_EEPROM_ADDRESS 0x40
+#else
+  #define STATS_EEPROM_ADDRESS 0x32
+#endif
+
+#define HAS_SERVICE_INTERVALS (defined(SERVICE_INTERVAL_1) || defined(SERVICE_INTERVAL_2) || defined(SERVICE_INTERVAL_3))
+
 struct printStatistics {    // 16 bytes
   //const uint8_t magic;    // Magic header, it will always be 0x16
   uint16_t totalPrints;     // Number of prints
@@ -38,6 +47,9 @@ struct printStatistics {    // 16 bytes
   uint32_t printTime;       // Accumulated printing time
   uint32_t longestPrint;    // Longest successful print job
   float    filamentUsed;    // Accumulated filament consumed in mm
+  #if HAS_SERVICE_INTERVALS
+    uint32_t nextService1, nextService2, nextService3; // Service intervals (or placeholders)
+  #endif
 };
 
 class PrintCounter: public Stopwatch {
@@ -45,9 +57,9 @@ class PrintCounter: public Stopwatch {
     typedef Stopwatch super;
 
     #if ENABLED(I2C_EEPROM) || ENABLED(SPI_EEPROM)
-      typedef uint32_t promdress;
+      typedef uint32_t eeprom_address_t;
     #else
-      typedef uint16_t promdress;
+      typedef uint16_t eeprom_address_t;
     #endif
 
     static printStatistics data;
@@ -56,7 +68,7 @@ class PrintCounter: public Stopwatch {
      * @brief EEPROM address
      * @details Defines the start offset address where the data is stored.
      */
-    static const promdress address;
+    static const eeprom_address_t address;
 
     /**
      * @brief Interval in seconds between counter updates
@@ -169,6 +181,11 @@ class PrintCounter: public Stopwatch {
     static bool start();
     static bool stop();
     static void reset();
+
+    #if HAS_SERVICE_INTERVALS
+      static void resetServiceInterval(int index);
+      static bool needsService(int index);
+    #endif
 
     #if ENABLED(DEBUG_PRINTCOUNTER)
 

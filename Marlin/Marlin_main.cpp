@@ -8247,10 +8247,21 @@ inline void gcode_M77() { print_job_timer.stop(); }
    */
   inline void gcode_M78() {
     // "M78 S78" will reset the statistics
-    if (parser.intval('S') == 78)
+    if (parser.intval('S') == 78) {
       print_job_timer.initStats();
-    else
-      print_job_timer.showStats();
+      lcd_reset_status();
+      return;
+    }
+
+    #if HAS_SERVICE_INTERVALS
+      if (parser.seenval('R')) {
+      	print_job_timer.resetServiceInterval(parser.value_int());
+      	lcd_reset_status();
+      	return;
+      }
+    #endif
+
+    print_job_timer.showStats();
   }
 #endif
 

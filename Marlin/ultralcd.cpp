@@ -182,6 +182,22 @@ uint16_t max_display_update_time = 0;
   void lcd_control_menu();
   void lcd_control_temperature_menu();
   void lcd_control_motion_menu();
+  #if HAS_SERVICE_INTERVALS
+    void lcd_service_menu();
+
+    #ifdef SERVICE_INTERVAL_1
+      void menu_service1();
+      void menu_action_service1();
+    #endif
+    #ifdef SERVICE_INTERVAL_2
+      void menu_service2();
+      void menu_action_service2();
+    #endif
+    #ifdef SERVICE_INTERVAL_3
+      void menu_service3();
+      void menu_action_service3();
+    #endif
+  #endif
 
   #if DISABLED(SLIM_LCD_MENUS)
     void lcd_control_temperature_preheat_material1_settings_menu();
@@ -755,9 +771,19 @@ void lcd_reset_status() {
   static const char paused[] PROGMEM = MSG_PRINT_PAUSED;
   static const char printing[] PROGMEM = MSG_PRINTING;
   static const char welcome[] PROGMEM = WELCOME_MSG;
+  #ifdef SERVICE_INTERVAL_1
+    static const char service1[] PROGMEM = { "> " SERVICE_NAME_1 "!" };
+  #endif
+  #ifdef SERVICE_INTERVAL_2
+    static const char service2[] PROGMEM = { "> " SERVICE_NAME_2 "!" };
+  #endif
+  #ifdef SERVICE_INTERVAL_3
+    static const char service3[] PROGMEM = { "> " SERVICE_NAME_3 "!" };
+  #endif
   #if ENABLED(FILAMENT_RUNOUT_SENSOR)
    static const char nofilament[] PROGMEM = MSG_NO_FILAMENT;
   #endif
+
   const char *msg;
   if (print_job_timer.isPaused())
     msg = paused;
@@ -767,10 +793,22 @@ void lcd_reset_status() {
   #endif
   else if (print_job_timer.isRunning())
     msg = printing;
-  #if ENABLED(FILAMENT_RUNOUT_SENSOR)
-  else if (runout.filament_ran_out)
-    msg = nofilament;
+
+  #ifdef SERVICE_INTERVAL_1
+    else if (print_job_timer.needsService(1)) msg = service1;
   #endif
+  #ifdef SERVICE_INTERVAL_2
+    else if (print_job_timer.needsService(2)) msg = service2;
+  #endif
+  #ifdef SERVICE_INTERVAL_3
+    else if (print_job_timer.needsService(3)) msg = service3;
+  #endif
+
+  #if ENABLED(FILAMENT_RUNOUT_SENSOR)
+    else if (runout.filament_ran_out)
+      msg = nofilament;
+  #endif
+
   else
     msg = welcome;
 
@@ -1087,6 +1125,63 @@ void lcd_quick_feedback(const bool clear_buttons) {
     }
 
   #endif
+  #if HAS_SERVICE_INTERVALS
+
+    inline void _lcd_reset_service(const int index) {
+      print_job_timer.resetServiceInterval(index);
+      lcd_buzz(200, 404);
+      lcd_reset_status();
+      lcd_return_to_status();
+    }
+
+    inline void _menu_service(const int index) {
+        START_MENU();
+        MENU_BACK(MSG_SERVICE);
+        switch (index) {
+          #ifdef SERVICE_INTERVAL_1
+            case 1: MENU_ITEM(function, MSG_SERVICE_RESET, menu_action_service1); break;
+          #endif
+          #ifdef SERVICE_INTERVAL_2
+            case 2: MENU_ITEM(function, MSG_SERVICE_RESET, menu_action_service2); break;
+          #endif
+          #ifdef SERVICE_INTERVAL_2
+            case 3: MENU_ITEM(function, MSG_SERVICE_RESET, menu_action_service2); break;
+          #endif
+        }
+        END_MENU();
+    }
+
+    #ifdef SERVICE_INTERVAL_1
+      void menu_action_service1() { _lcd_reset_service(1); }
+      void menu_service1() { _menu_service(1); }
+    #endif
+    #ifdef SERVICE_INTERVAL_2
+      void menu_action_service2() { _lcd_reset_service(2); }
+      void menu_service2() { _menu_service(2); }
+    #endif
+    #ifdef SERVICE_INTERVAL_3
+      void menu_action_service3() { _lcd_reset_service(3); }
+      void menu_service3() { _menu_service(3); }
+    #endif
+
+    void lcd_service_menu() {
+      START_MENU();
+      MENU_BACK(MSG_MAIN); // ^ Main
+
+      #ifdef SERVICE_INTERVAL_1
+        MENU_ITEM(submenu, SERVICE_NAME_1, menu_service1);
+      #endif
+      #ifdef SERVICE_INTERVAL_2
+        MENU_ITEM(submenu, SERVICE_NAME_2, menu_service2);
+      #endif
+      #ifdef SERVICE_INTERVAL_3
+        MENU_ITEM(submenu, SERVICE_NAME_3, menu_service3);
+      #endif
+
+      END_MENU();
+    }
+
+  #endif // HAS_SERVICE_INTERVALS
 
   /**
    *
@@ -1159,6 +1254,9 @@ void lcd_quick_feedback(const bool clear_buttons) {
       MENU_ITEM(submenu, MSG_LED_CONTROL, lcd_led_menu);
     #endif
 
+    #if HAS_SERVICE_INTERVALS
+      MENU_ITEM(submenu, MSG_SERVICE, lcd_service_menu);
+    #endif
     END_MENU();
   }
 
@@ -4090,17 +4188,37 @@ void lcd_quick_feedback(const bool clear_buttons) {
         elapsed.toString(buffer);
 
         STATIC_ITEM(MSG_INFO_PRINT_TIME ": ", false, false);                                           // Total print Time:
-        STATIC_ITEM("", false, false, buffer);                                                         // 99y 364d 23h 59m 59s
+        STATIC_ITEM(">", false, false, buffer);                                                        // 99y 364d 23h 59m 59s
 
         elapsed = stats.longestPrint;
         elapsed.toString(buffer);
 
         STATIC_ITEM(MSG_INFO_PRINT_LONGEST ": ", false, false);                                        // Longest job time:
-        STATIC_ITEM("", false, false, buffer);                                                         // 99y 364d 23h 59m 59s
+        STATIC_ITEM(">", false, false, buffer);                                                        // 99y 364d 23h 59m 59s
 
         sprintf_P(buffer, PSTR("%ld.%im"), long(stats.filamentUsed / 1000), int16_t(stats.filamentUsed / 100) % 10);
         STATIC_ITEM(MSG_INFO_PRINT_FILAMENT ": ", false, false);                                       // Extruded total:
-        STATIC_ITEM("", false, false, buffer);                                                         // 125m
+        STATIC_ITEM(">", false, false, buffer);                                                        // 125m
+
+        #ifdef SERVICE_INTERVAL_1
+          elapsed = stats.nextService1;
+          elapsed.toString(buffer);
+          STATIC_ITEM(SERVICE_NAME_1 " in: ", false, false);
+          STATIC_ITEM("> ", false, false, buffer);
+        #endif
+        #ifdef SERVICE_INTERVAL_2
+          elapsed = stats.nextService2;
+          elapsed.toString(buffer);
+          STATIC_ITEM(SERVICE_NAME_2 " in: ", false, false);
+          STATIC_ITEM("> ", false, false, buffer);
+        #endif
+        #ifdef SERVICE_INTERVAL_3
+          elapsed = stats.nextService3;
+          elapsed.toString(buffer);
+          STATIC_ITEM(SERVICE_NAME_3 " in: ", false, false);
+          STATIC_ITEM("> ", false, false, buffer);
+        #endif
+
         END_SCREEN();
       }
     #endif // PRINTCOUNTER

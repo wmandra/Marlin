@@ -108,4 +108,6 @@ void serial_spaces(uint8_t count);
 #define SERIAL_ERROR_SP(C)    serial_spaces(C)
 #define SERIAL_PROTOCOL_SP(C) serial_spaces(C)
 
+#define SERIAL_ECHO_MSG(STR)                do{ SERIAL_ECHO_START(); SERIAL_ECHOLNPGM(STR); }while(0)
+
 #endif // __SERIAL_H__
