@@ -81,11 +81,11 @@
 #define Y_BED_SIZE 450
 #define Z_MAX_POS  450
 
-#define DEFAULT_MAX_FEEDRATE          { 250, 250, 15, 100 }
-#define DEFAULT_MAX_ACCELERATION      { 3000, 3000, 200, 10000 }
-#define DEFAULT_ACCELERATION          1000    // X, Y, Z and E acceleration for printing moves
-#define DEFAULT_RETRACT_ACCELERATION  3000    // E acceleration for retracts
-#define DEFAULT_TRAVEL_ACCELERATION   100    // X, Y, Z acceleration for travel (non printing) moves
+#define DEFAULT_MAX_FEEDRATE          { 150, 150, 15, 100 }
+#define DEFAULT_MAX_ACCELERATION      { 5000, 5000, 200, 6000 }
+#define DEFAULT_ACCELERATION           500    // X, Y, Z and E acceleration for printing moves
+#define DEFAULT_RETRACT_ACCELERATION  1500    // E acceleration for retracts
+#define DEFAULT_TRAVEL_ACCELERATION   5000    // X, Y, Z acceleration for travel (non printing) moves
 
 #define DEFAULT_JERK  10.0
 #define DEFAULT_JUNCTION_DEVIATION  0.4*DEFAULT_JERK*DEFAULT_JERK/DEFAULT_ACCELERATION 
@@ -144,11 +144,11 @@
 // @section features
 
 #define CASE_LIGHT_ENABLE // reassigns HEATER_1_PIN to case lights
-#define NO_SD_DETECT // undefines SD_DETECT_PIN
+#define NO_SD_DETECT      // undefines SD_DETECT_PIN
 #define CASE_TEMP_ENABLE
 
-#define NEW_JERK_CONTROL
-#define NEW_ACCELERATION_CONTROL
+#define NEW_JERK_CONTROL          // Junction Deviation
+#define NEW_ACCELERATION_CONTROL  // S-Curve Acceleration
 
 //#define LINEAR_ADVANCE
 //#define LINEAR_ADVANCE_K0 0.22
@@ -156,7 +156,7 @@
 //#define SLOWER_HOMING
 #define FAN_FIX
 
-#define EZOUT_ENABLE // reassigns Y_MAX_PIN to FIL_RUNOUT_PIN
+#define EZOUT_ENABLE // Enable Filament Runout Sensor (uses Y_MAX_PIN)
 
 // @section leveling
 
@@ -165,7 +165,7 @@
 
 #define EZABL_ENABLE
 #define EZABL_POINTS 5
-#define EZABL_PROBE_EDGE 15
+#define EZABL_PROBE_EDGE 25
 //#define EZABL_FASTPROBE
 #define EZABL_OUTSIDE_GRID_COMPENSATION
 
@@ -936,7 +936,7 @@
 #define MIN_PROBE_EDGE 5
 
 // X and Y axis travel speed (mm/m) between probes
-#define XY_PROBE_SPEED 9000
+#define XY_PROBE_SPEED 7200
 
 // Feedrate (mm/m) for the first approach when double-probing (MULTIPLE_PROBING == 2)
 #define Z_PROBE_SPEED_FAST HOMING_FEEDRATE_Z
