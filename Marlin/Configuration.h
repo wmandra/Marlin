@@ -173,10 +173,6 @@
 //#define OEM
 //#define VOLCANO
 #define V6HEAVYDUTY
-//#define FANG
-//#define TM3DAERO
-//#define TM3DAERO_EXTENDED
-//#define PETSFANG //This is the RIGHT mounted version - if using the left mount please use the CUSTOM_PROBE option.
 //#define CUSTOM_PROBE
 //#define CUSTOM_X_PROBE_OFFSET_FROM_EXTRUDER 0  // X offset: -left  +right  [of the nozzle]
 //#define CUSTOM_Y_PROBE_OFFSET_FROM_EXTRUDER 0  // Y offset: -front +behind [the nozzle]
@@ -929,22 +925,6 @@
   #define X_PROBE_OFFSET_FROM_EXTRUDER -44
   #define Y_PROBE_OFFSET_FROM_EXTRUDER -10
 #endif
-#if ENABLED(FANG) //DISCONTINUED - SAGS TOO MUCH
-  #define X_PROBE_OFFSET_FROM_EXTRUDER 48
-  #define Y_PROBE_OFFSET_FROM_EXTRUDER -11
-#endif
-#if ENABLED(TM3DAERO)
-  #define X_PROBE_OFFSET_FROM_EXTRUDER -51
-  #define Y_PROBE_OFFSET_FROM_EXTRUDER -7
-#endif
-#if ENABLED(TM3DAERO_EXTENDED)
-  #define X_PROBE_OFFSET_FROM_EXTRUDER -55
-  #define Y_PROBE_OFFSET_FROM_EXTRUDER -7
-#endif
-#if ENABLED(PETSFANG)
-  #define X_PROBE_OFFSET_FROM_EXTRUDER 48
-  #define Y_PROBE_OFFSET_FROM_EXTRUDER -2
-#endif
 #if ENABLED(CUSTOM_PROBE)
   #define X_PROBE_OFFSET_FROM_EXTRUDER CUSTOM_X_PROBE_OFFSET_FROM_EXTRUDER
   #define Y_PROBE_OFFSET_FROM_EXTRUDER CUSTOM_Y_PROBE_OFFSET_FROM_EXTRUDER
@@ -1108,7 +1088,7 @@
 #endif
 #if ENABLED(FILAMENT_RUNOUT_SENSOR)
   #define NUM_RUNOUT_SENSORS         1 // Number of sensors, up to one per extruder. Define a FIL_RUNOUT#_PIN for each.
-  #define FIL_RUNOUT_PIN            34 // Reuse Y Max ??
+  #define FIL_RUNOUT_PIN            34 // Reuse Y Max
   #define FIL_RUNOUT_INVERTING   false // set to true to invert the logic of the sensor.
   #define FIL_RUNOUT_PULLUP            // Use internal pullup for filament runout pins.
   #define FILAMENT_RUNOUT_SCRIPT "M600"
