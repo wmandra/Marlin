@@ -1717,6 +1717,10 @@ static_assert(sanity_e_steps <= SANE_MAX_STEPRATE, "Combination of DEFAULT_MAX_F
   #error "POWER_LOSS_RECOVERY currently requires an LCD Controller."
 #endif
 
+#if ENABLED(ULTIPANEL) && ENABLED(ULTIPANEL_FEEDRATE) && ENABLED(ULTIPANEL_FEEDMULTIPLY)
+  #error "ULTIPANEL_FEEDRATE requires ULTIPANEL_FEEDMULTIPLY to be disabled."
+#endif
+
 /**
  *
  * Advanced PRINTCOUNTER settings

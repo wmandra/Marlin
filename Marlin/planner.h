@@ -270,6 +270,11 @@ class Planner {
       static bool abort_on_endstop_hit;
     #endif
 
+    /**
+     * Speed of previous path line segment
+     */
+    static float previous_speed[NUM_AXIS];
+
   private:
 
     /**
@@ -277,11 +282,6 @@ class Planner {
      * Recalculated if any axis_steps_per_mm are changed by gcode
      */
     static int32_t position[NUM_AXIS];
-
-    /**
-     * Speed of previous path line segment
-     */
-    static float previous_speed[NUM_AXIS];
 
     /**
      * Nominal speed of previous path line segment (mm/s)^2

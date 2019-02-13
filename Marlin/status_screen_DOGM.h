@@ -441,15 +441,20 @@ static void lcd_implementation_status_screen() {
   //
 
   if (PAGE_CONTAINS(51 - INFO_FONT_HEIGHT, 49)) {
-    lcd_setFont(FONT_MENU);
-    u8g.setPrintPos(3, 50);
-    lcd_print(LCD_STR_FEEDRATE[0]);
+    #if ENABLED(ULTIPANEL_FEEDMULTIPLY) || ENABLED(ULTIPANEL_FEEDRATE)
+      lcd_setFont(FONT_MENU);
+      u8g.setPrintPos(3, 50);
+      lcd_print(LCD_STR_FEEDRATE[0]);
 
-    lcd_setFont(FONT_STATUSMENU);
-    u8g.setPrintPos(12, 50);
-    lcd_print(itostr3(feedrate_percentage));
-    u8g.print('%');
-
+      lcd_setFont(FONT_STATUSMENU);
+      u8g.setPrintPos(12, 50);
+    #endif
+    #if ENABLED(ULTIPANEL_FEEDMULTIPLY)
+      lcd_print(itostr3(feedrate_percentage));
+      u8g.print('%');
+    #elif ENABLED(ULTIPANEL_FEEDRATE)
+      lcd_print(itostr3(planner.previous_speed[E_AXIS]));
+    #endif
     //
     // Filament sensor display if SD is disabled
     //
