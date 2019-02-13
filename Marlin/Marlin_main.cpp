@@ -9123,6 +9123,13 @@ void report_current_position() {
   }
 #endif // M114_DETAIL
 
+void report_current_axis_modes() {
+  SERIAL_PROTOCOLPAIR("E:", (axis_relative_modes[E_CART] ? "RELATIVE" : "ABSOLUTE"));
+  SERIAL_CHAR(' ');
+  SERIAL_PROTOCOLPAIR("A:", (relative_mode ? "RELATIVE" : "ABSOLUTE"));
+  SERIAL_EOL();
+}
+
 /**
  * M114: Report current position to host
  */
@@ -9131,6 +9138,8 @@ inline void gcode_M114() {
   #ifdef M114_DETAIL
     if (parser.seen('D')) return report_current_position_detail();
   #endif
+
+  if (parser.seen('M')) return report_current_axis_modes();
 
   planner.synchronize();
 
