@@ -1608,6 +1608,21 @@ static_assert(COUNT(sanity_arr_2) <= NUM_AXIS_N, "DEFAULT_MAX_FEEDRATE has too m
 static_assert(COUNT(sanity_arr_3) <= NUM_AXIS_N, "DEFAULT_MAX_ACCELERATION has too many elements.");
 
 /**
+ * Sanity checks for CPU limitations
+ */
+#define SANE_MAX_STEPRATE 37000
+constexpr float sanity_x_steps = sanity_arr_1[0]*sanity_arr_2[0],
+                sanity_y_steps = sanity_arr_1[1]*sanity_arr_2[1],
+                sanity_z_steps = sanity_arr_1[2]*sanity_arr_2[2],
+                sanity_e_steps = sanity_arr_1[3]*sanity_arr_2[3];
+
+
+static_assert(sanity_x_steps <= SANE_MAX_STEPRATE, "Combination of DEFAULT_MAX_FEEDRATE and DEFAULT_AXIS_STEPS_PER_UNIT too high for axis X.");
+static_assert(sanity_y_steps <= SANE_MAX_STEPRATE, "Combination of DEFAULT_MAX_FEEDRATE and DEFAULT_AXIS_STEPS_PER_UNIT too high for axis Y.");
+static_assert(sanity_z_steps <= SANE_MAX_STEPRATE, "Combination of DEFAULT_MAX_FEEDRATE and DEFAULT_AXIS_STEPS_PER_UNIT too high for axis Z.");
+static_assert(sanity_e_steps <= SANE_MAX_STEPRATE, "Combination of DEFAULT_MAX_FEEDRATE and DEFAULT_AXIS_STEPS_PER_UNIT too high for axis E.");
+
+/**
  * Sanity checks for Spindle / Laser
  */
 #if ENABLED(SPINDLE_LASER_ENABLE)
