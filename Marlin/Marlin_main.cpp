@@ -2038,11 +2038,14 @@ void clean_up_after_endstop_or_probe_move() {
       if (p)
         for (uint8_t x = 0; x < FAN_COUNT; x++) {
           paused_fanSpeeds[x] = fanSpeeds[x];
-          fanSpeeds[x] = 0;
+          //fanSpeeds[x] = 0;
+          set_fan_speed(x, 0);
         }
       else
-        for (uint8_t x = 0; x < FAN_COUNT; x++)
-          fanSpeeds[x] = paused_fanSpeeds[x];
+        for (uint8_t x = 0; x < FAN_COUNT; x++) {
+          //fanSpeeds[x] = paused_fanSpeeds[x];
+          set_fan_speed(x, paused_fanSpeeds[x]);
+        }
     }
   }
 
@@ -7622,13 +7625,13 @@ inline void gcode_M42() {
   #if FAN_COUNT > 0
     switch (pin_number) {
       #if HAS_FAN0
-        case FAN_PIN: fanSpeeds[0] = pin_status; break;
+        case FAN_PIN: set_fan_speed(0, pin_status); break; // fanSpeeds[0] = pin_status; break;
       #endif
       #if HAS_FAN1
-        case FAN1_PIN: fanSpeeds[1] = pin_status; break;
+        case FAN1_PIN: set_fan_speed(1, pin_status); break; //fanSpeeds[1] = pin_status; break;
       #endif
       #if HAS_FAN2
-        case FAN2_PIN: fanSpeeds[2] = pin_status; break;
+        case FAN2_PIN: set_fan_speed(2, pin_status); break; //fanSpeeds[2] = pin_status; break;
       #endif
     }
   #endif
@@ -8327,11 +8330,13 @@ inline void gcode_M105() {
         if (t > 0) {
           switch (t) {
             case 1:
-              fanSpeeds[p] = old_fanSpeeds[p];
+              //fanSpeeds[p] = old_fanSpeeds[p];
+              set_fan_speed(p, old_fanSpeeds[p]);
               break;
             case 2:
               old_fanSpeeds[p] = fanSpeeds[p];
-              fanSpeeds[p] = new_fanSpeeds[p];
+              //fanSpeeds[p] = new_fanSpeeds[p];
+              set_fan_speed(p, new_fanSpeeds[p]);
               break;
             default:
               new_fanSpeeds[p] = MIN(t, 255);
@@ -8341,7 +8346,8 @@ inline void gcode_M105() {
         }
       #endif // EXTRA_FAN_SPEED
       const uint16_t s = parser.ushortval('S', 255);
-      fanSpeeds[p] = MIN(s, 255U);
+      //fanSpeeds[p] = MIN(s, 255U);
+      set_fan_speed(p, MIN(s, 255U));
     }
   }
 
@@ -8350,7 +8356,7 @@ inline void gcode_M105() {
    */
   inline void gcode_M107() {
     const uint16_t p = parser.ushortval('P');
-    if (p < FAN_COUNT) fanSpeeds[p] = 0;
+    if (p < FAN_COUNT) set_fan_speed(p, 0); // fanSpeeds[p] = 0;
   }
 
 #endif // FAN_COUNT > 0
@@ -8897,7 +8903,7 @@ inline void gcode_M81() {
   planner.finish_and_disable();
 
   #if FAN_COUNT > 0
-    for (uint8_t i = 0; i < FAN_COUNT; i++) fanSpeeds[i] = 0;
+    for (uint8_t i = 0; i < FAN_COUNT; i++) set_fan_speed(i, 0); // fanSpeeds[i] = 0;
     #if ENABLED(PROBING_FANS_OFF)
       fans_paused = false;
       ZERO(paused_fanSpeeds);
@@ -15335,7 +15341,7 @@ void loop() {
       print_job_timer.stop();
       thermalManager.disable_all_heaters();
       #if FAN_COUNT > 0
-        for (uint8_t i = 0; i < FAN_COUNT; i++) fanSpeeds[i] = 0;
+        for (uint8_t i = 0; i < FAN_COUNT; i++) set_fan_speed(i, 0); //fanSpeeds[i] = 0;
       #endif
       wait_for_heatup = false;
       #if ENABLED(POWER_LOSS_RECOVERY)

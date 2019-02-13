@@ -644,4 +644,15 @@ void do_blocking_move_to_xy(const float &rx, const float &ry, const float &fr_mm
   FORCE_INLINE bool position_is_reachable_by_probe(const float &rx, const float &ry) { return position_is_reachable(rx, ry); }
 #endif
 
+#if FAN_COUNT > 0
+  inline void print_fan_speed(const uint8_t index) {
+    SERIAL_ECHOPAIR("Fanspeed", index);
+    SERIAL_ECHOLNPAIR(":", fanSpeeds[index]);
+  }
+
+  inline void set_fan_speed(const uint8_t index, const int16_t speed) {
+    fanSpeeds[index] = speed;
+    print_fan_speed(index);
+  }
+#endif
 #endif // MARLIN_H
