@@ -81,7 +81,7 @@
 #define Y_BED_SIZE 450
 #define Z_MAX_POS  450
 
-#define DEFAULT_MAX_FEEDRATE          { 150, 150, 15, 100 }
+#define DEFAULT_MAX_FEEDRATE          { 200, 200, 15, 85 }
 #define DEFAULT_MAX_ACCELERATION      { 5000, 5000, 200, 6000 }
 #define DEFAULT_ACCELERATION           500    // X, Y, Z and E acceleration for printing moves
 #define DEFAULT_RETRACT_ACCELERATION  1500    // E acceleration for retracts
@@ -116,8 +116,7 @@
 #define Z_MIN_PROBE_ENDSTOP_INVERTING false // set to true to invert the logic of the probe.
 
 #define TITAN_EXTRUDER
-#define TITAN_EXTRUDER_ESTEPS 430
-// motor steps * microsteps * gear ratio / (hobbed gear diameter * pi)
+#define TITAN_EXTRUDER_ESTEPS 430 // motor steps * microsteps * gear ratio / (hobbed gear diameter * pi)
 
 //#define CUSTOM_ESTEPS
 //#define CUSTOM_ESTEPS_VALUE 999
@@ -936,7 +935,7 @@
 #define MIN_PROBE_EDGE 5
 
 // X and Y axis travel speed (mm/m) between probes
-#define XY_PROBE_SPEED 7200
+#define XY_PROBE_SPEED 8000
 
 // Feedrate (mm/m) for the first approach when double-probing (MULTIPLE_PROBING == 2)
 #define Z_PROBE_SPEED_FAST HOMING_FEEDRATE_Z
