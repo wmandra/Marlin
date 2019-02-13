@@ -1693,10 +1693,8 @@ void lcd_quick_feedback(const bool clear_buttons) {
     #endif
     #if FAN_COUNT > 0
       #if FAN_COUNT > 1
-        //fanSpeeds[active_extruder < FAN_COUNT ? active_extruder : 0] = fan;
         set_fan_speed(active_extruder < FAN_COUNT ? active_extruder : 0, fan);
       #else
-        // fanSpeeds[0] = fan;
         set_fan_speed(0, fan);
       #endif
     #else
@@ -1902,7 +1900,7 @@ void lcd_quick_feedback(const bool clear_buttons) {
 
   void lcd_cooldown() {
     #if FAN_COUNT > 0
-      for (uint8_t i = 0; i < FAN_COUNT; i++) set_fan_speed(i, 0); // fanSpeeds[i] = 0;
+      for (uint8_t i = 0; i < FAN_COUNT; i++) set_fan_speed(i, 0);
     #endif
     thermalManager.disable_all_heaters();
     lcd_return_to_status();
