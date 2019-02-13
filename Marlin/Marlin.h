@@ -646,8 +646,8 @@ void do_blocking_move_to_xy(const float &rx, const float &ry, const float &fr_mm
 
 #if FAN_COUNT > 0
   inline void print_fan_speed(const uint8_t index) {
-    SERIAL_ECHOPAIR("Fanspeed", index);
-    SERIAL_ECHOLNPAIR(":", fanSpeeds[index]);
+    SERIAL_PROTOCOLPAIR("Fanspeed", index);
+    SERIAL_PROTOCOLLNPAIR(":", fanSpeeds[index]);
   }
 
   inline void set_fan_speed(const uint8_t index, const int16_t speed) {
