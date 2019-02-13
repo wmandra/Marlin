@@ -1539,11 +1539,11 @@
 #if ENABLED(PRINTCOUNTER)
   // activate up to 3 service interval watchdogs
   #define SERVICE_INTERVAL_1  100 // print hours
-  #define SERVICE_NAME_1      "Lubrication Service"
+  #define SERVICE_NAME_1      "Belt Tension Service"
   #define SERVICE_INTERVAL_2  300 // print hours
-  #define SERVICE_NAME_2      "Belt Tension Service"
-  #define SERVICE_INTERVAL_3  500 // print hours
-  #define SERVICE_NAME_3      "Structural Service"
+  #define SERVICE_NAME_2      "Lubrication Service"
+  //#define SERVICE_INTERVAL_3  500 // print hours
+  //#define SERVICE_NAME_3      "Structural Service"
 
   #define SERVICE_WARNING_BUZZES 3
 #endif
