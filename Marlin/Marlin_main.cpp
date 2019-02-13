@@ -8312,6 +8312,7 @@ inline void gcode_M105() {
    *
    *  S<int>   Speed between 0-255
    *  P<index> Fan index, if more than one fan
+   *  A        Use the active extruder as the fan index
    *
    * With EXTRA_FAN_SPEED enabled:
    *
@@ -8321,7 +8322,13 @@ inline void gcode_M105() {
    *           3-255 = Set the speed for use with T2
    */
   inline void gcode_M106() {
-    const uint8_t p = parser.byteval('P');
+    const uint8_t p =
+      #if EXTRUDERS > 1
+        parser.seen('A') ? active_extruder :
+      #endif
+      parser.byteval('P')
+    ;
+
     if (p < FAN_COUNT) {
       #if ENABLED(EXTRA_FAN_SPEED)
         const int16_t t = parser.intval('T');
@@ -8350,7 +8357,12 @@ inline void gcode_M105() {
    * M107: Fan Off
    */
   inline void gcode_M107() {
-    const uint16_t p = parser.ushortval('P');
+    const uint16_t p =
+      #if EXTRUDERS > 1
+        parser.seen('A') ? active_extruder :
+      #endif
+      parser.ushortval('P')
+    ;
     if (p < FAN_COUNT) set_fan_speed(p, 0);
   }
 
