@@ -558,7 +558,7 @@ int Temperature::getHeaterPower(const int heater) {
       ;
       const uint8_t bit = pgm_read_byte(&fanBit[f]);
       if (pin >= 0 && !TEST(fanDone, bit)) {
-        uint8_t newFanSpeed = TEST(fanState, bit) ? EXTRUDER_AUTO_FAN_SPEED : 0;
+        uint8_t newFanSpeed = TEST(fanState, bit) ? default_autofan_speed : 0;
         #if ENABLED(AUTO_POWER_E_FANS)
           autofan_speed[f] = newFanSpeed;
         #endif

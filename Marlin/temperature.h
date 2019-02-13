@@ -131,6 +131,10 @@ class Temperature {
       static int16_t autofan_speed[HOTENDS];
     #endif
 
+    #if HAS_AUTO_FAN
+      static int8_t default_autofan_speed = EXTRUDER_AUTO_FAN_SPEED;
+    #endif
+
     #if ENABLED(FAN_SOFT_PWM)
       static uint8_t soft_pwm_amount_fan[FAN_COUNT],
                      soft_pwm_count_fan[FAN_COUNT];

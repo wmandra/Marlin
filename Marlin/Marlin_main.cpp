@@ -8248,6 +8248,12 @@ inline void gcode_M104() {
     if (target_extruder != active_extruder) return;
   #endif
 
+  #if HAS_AUTO_FAN
+    if (parser.seenval('A')) {
+      thermalManager.default_autofan_speed = MIN(parser.value_byte(), 255);
+    }
+  #endif
+
   if (parser.seenval('S')) {
     const int16_t temp = parser.value_celsius();
     thermalManager.setTargetHotend(temp, target_extruder);
