@@ -25,7 +25,7 @@
 
 #include "../inc/MarlinConfig.h"
 
-#if ENABLED(ULTRA_LCD) || ENABLED(MALYAN_LCD)
+#if ENABLED(ULTRA_LCD) 
   void lcd_init();
   bool lcd_detected();
   void lcd_update();
@@ -196,7 +196,7 @@
     void wait_for_release();
   #endif
 
-#else // MALYAN_LCD or no LCD
+#else // no LCD
 
   constexpr bool lcd_wait_for_move = false;
 
