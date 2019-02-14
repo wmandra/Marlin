@@ -5741,7 +5741,6 @@ void lcd_reset_alert_level() { lcd_status_message_level = 0; }
 
         #endif // LCD_HAS_DIRECTIONAL_BUTTONS
 
-        
         #if ENABLED(LCD_HAS_SLOW_BUTTONS)
           newbutton |= slow_buttons;
         #endif
