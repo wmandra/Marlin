@@ -4299,14 +4299,7 @@ void lcd_quick_feedback(const bool clear_buttons) {
       STATIC_ITEM(MSG_INFO_BAUDRATE ": " STRINGIFY(BAUDRATE), true); // Baud: 250000
       STATIC_ITEM(MSG_INFO_PROTOCOL ": " PROTOCOL_VERSION, true);    // Protocol: 1.0
       #if POWER_SUPPLY == 0
-        STATIC_ITEM(MSG_INFO_PSU ": "
-          #if ENABLED(GENERIC_PSU_NAME)
-            GENERIC_PSU_NAME
-          #else
-            "Generic"
-          #endif
-          , true);
-        #endif
+        STATIC_ITEM(MSG_INFO_PSU ": " GENERIC_PSU_NAME, true);
       #elif POWER_SUPPLY == 1
         STATIC_ITEM(MSG_INFO_PSU ": ATX", true);  // Power Supply: ATX
       #elif POWER_SUPPLY == 2

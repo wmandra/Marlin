@@ -263,6 +263,11 @@
   #define PS_ON_AWAKE  HIGH
   #define PS_ON_ASLEEP LOW
 #endif
+#if (POWER_SUPPLY == 0)
+  #ifndef GENERIC_PSU_NAME
+    #define GENERIC_PSU_NAME "Generic"
+  #endif
+#endif
 #define HAS_POWER_SWITCH (POWER_SUPPLY > 0 && PIN_EXISTS(PS_ON))
 
 /**
