@@ -1191,28 +1191,6 @@ void lcd_quick_feedback(const bool clear_buttons) {
     START_MENU();
     MENU_BACK(MSG_WATCH);
 
-    #if ENABLED(CUSTOM_USER_MENUS)
-      MENU_ITEM(submenu, MSG_USER_MENU, _lcd_user_menu);
-    #endif
-
-    //
-    // Debug Menu when certain options are enabled
-    //
-    #if HAS_DEBUG_MENU
-      MENU_ITEM(submenu, MSG_DEBUG_MENU, lcd_debug_menu);
-    #endif
-
-    //
-    // Set Case light on/off/brightness
-    //
-    #if ENABLED(MENU_ITEM_CASE_LIGHT)
-      if (USEABLE_HARDWARE_PWM(CASE_LIGHT_PIN)) {
-        MENU_ITEM(submenu, MSG_CASE_LIGHT, case_light_menu);
-      }
-      else
-        MENU_ITEM_EDIT_CALLBACK(bool, MSG_CASE_LIGHT, (bool*)&case_light_on, update_case_light);
-    #endif
-
     if (planner.movesplanned() || IS_SD_PRINTING())
       MENU_ITEM(submenu, MSG_TUNE, lcd_tune_menu);
     else
@@ -1244,17 +1222,40 @@ void lcd_quick_feedback(const bool clear_buttons) {
       }
     #endif // SDSUPPORT
 
-    #if ENABLED(LCD_INFO_MENU)
-      MENU_ITEM(submenu, MSG_INFO_MENU, lcd_info_menu);
+    //
+    // Set Case light on/off/brightness
+    //
+    #if ENABLED(MENU_ITEM_CASE_LIGHT)
+      if (USEABLE_HARDWARE_PWM(CASE_LIGHT_PIN)) {
+        MENU_ITEM(submenu, MSG_CASE_LIGHT, case_light_menu);
+      }
+      else
+        MENU_ITEM_EDIT_CALLBACK(bool, MSG_CASE_LIGHT, (bool*)&case_light_on, update_case_light);
     #endif
 
     #if ENABLED(LED_CONTROL_MENU)
       MENU_ITEM(submenu, MSG_LED_CONTROL, lcd_led_menu);
     #endif
 
+    #if ENABLED(CUSTOM_USER_MENUS)
+      MENU_ITEM(submenu, MSG_USER_MENU, _lcd_user_menu);
+    #endif
+
     #if HAS_SERVICE_INTERVALS
       MENU_ITEM(submenu, MSG_SERVICE, lcd_service_menu);
     #endif
+
+    #if ENABLED(LCD_INFO_MENU)
+      MENU_ITEM(submenu, MSG_INFO_MENU, lcd_info_menu);
+    #endif
+
+    //
+    // Debug Menu when certain options are enabled
+    //
+    #if HAS_DEBUG_MENU
+      MENU_ITEM(submenu, MSG_DEBUG_MENU, lcd_debug_menu);
+    #endif
+
     END_MENU();
   }
 
@@ -4190,17 +4191,17 @@ void lcd_quick_feedback(const bool clear_buttons) {
         elapsed.toString(buffer);
 
         STATIC_ITEM(MSG_INFO_PRINT_TIME ": ", false, false);                                           // Total print Time:
-        STATIC_ITEM(">", false, false, buffer);                                                        // 99y 364d 23h 59m 59s
+        STATIC_ITEM("> ", false, false, buffer);                                                        // 99y 364d 23h 59m 59s
 
         elapsed = stats.longestPrint;
         elapsed.toString(buffer);
 
         STATIC_ITEM(MSG_INFO_PRINT_LONGEST ": ", false, false);                                        // Longest job time:
-        STATIC_ITEM(">", false, false, buffer);                                                        // 99y 364d 23h 59m 59s
+        STATIC_ITEM("> ", false, false, buffer);                                                        // 99y 364d 23h 59m 59s
 
         sprintf_P(buffer, PSTR("%ld.%im"), long(stats.filamentUsed / 1000), int16_t(stats.filamentUsed / 100) % 10);
         STATIC_ITEM(MSG_INFO_PRINT_FILAMENT ": ", false, false);                                       // Extruded total:
-        STATIC_ITEM(">", false, false, buffer);                                                        // 125m
+        STATIC_ITEM("> ", false, false, buffer);                                                        // 125m
 
         #ifdef SERVICE_INTERVAL_1
           elapsed = stats.nextService1;
@@ -4298,7 +4299,11 @@ void lcd_quick_feedback(const bool clear_buttons) {
       STATIC_ITEM(MSG_INFO_BAUDRATE ": " STRINGIFY(BAUDRATE), true); // Baud: 250000
       STATIC_ITEM(MSG_INFO_PROTOCOL ": " PROTOCOL_VERSION, true);    // Protocol: 1.0
       #if POWER_SUPPLY == 0
-        STATIC_ITEM(MSG_INFO_PSU ": Generic", true);
+        #ifdef GENERIC_PSU_NAME
+          STATIC_ITEM(MSG_INFO_PSU ": " GENERIC_PSU_NAME, true);
+        #else
+          STATIC_ITEM(MSG_INFO_PSU ": Generic", true);
+        #endif
       #elif POWER_SUPPLY == 1
         STATIC_ITEM(MSG_INFO_PSU ": ATX", true);  // Power Supply: ATX
       #elif POWER_SUPPLY == 2
