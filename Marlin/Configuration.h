@@ -330,6 +330,10 @@
  */
 #define POWER_SUPPLY 0
 
+#if POWER_SUPPLY == 0
+  #define GENERIC_PSU_NAME "Meanwell NES-350"
+#endif
+
 #if POWER_SUPPLY > 0
   // Enable this option to leave the PSU off at startup.
   // Power to steppers and heaters will need to be turned on with M80.
