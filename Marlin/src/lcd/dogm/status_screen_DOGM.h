@@ -205,7 +205,7 @@ static void lcd_implementation_status_screen() {
     static uint8_t fan_frame;
     if (old_blink != blink) {
       old_blink = blink;
-      if (!fanSpeeds[0] || ++fan_frame >= FAN_ANIM_FRAMES) fan_frame = 0;
+      if (!thermalManager.fanSpeeds[0] || ++fan_frame >= FAN_ANIM_FRAMES) fan_frame = 0;
     }
   #endif
 
@@ -272,7 +272,7 @@ static void lcd_implementation_status_screen() {
     #if HAS_FAN0
       if (PAGE_CONTAINS(STATUS_SCREEN_FAN_TEXT_Y - 7, STATUS_SCREEN_FAN_TEXT_Y)) {
         // Fan
-        const int16_t per = ((fanSpeeds[0] + 1) * 100) / 256;
+        const int16_t per = ((thermalManager.fanSpeeds[0] + 1) * 100) / 256;
         if (per) {
           u8g.setPrintPos(STATUS_SCREEN_FAN_TEXT_X, STATUS_SCREEN_FAN_TEXT_Y);
           lcd_print(itostr3(per));

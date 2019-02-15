@@ -89,10 +89,84 @@ float Temperature::current_temperature[HOTENDS] = { 0.0 };
 int16_t Temperature::current_temperature_raw[HOTENDS] = { 0 },
         Temperature::target_temperature[HOTENDS] = { 0 };
 
-#if ENABLED(AUTO_POWER_E_FANS)
+#if HAS_AUTO_FAN
+  int8_t Temperature::default_autofan_speed = EXTRUDER_AUTO_FAN_SPEED;
   int16_t Temperature::autofan_speed[HOTENDS] = { 0 };
 #endif
 
+#if FAN_COUNT > 0
+  int16_t Temperature::fanSpeeds[FAN_COUNT];
+  #if ENABLED(EXTRA_FAN_SPEED)
+    int16_t Temperature::primary_fanSpeeds[FAN_COUNT],
+            Temperature::secondary_fanSpeeds[FAN_COUNT];
+    bool Temperature::secondary_fan_mode[FAN_COUNT];
+  #endif
+  #if ENABLED(PROBING_FANS_OFF)
+    bool Temperature::fans_paused;
+    int16_t Temperature::paused_fanSpeeds[FAN_COUNT];
+  #endif
+#endif
+
+#if HAS_CONTROLLER_FAN
+  int Temperature::controllerFanSpeed;
+
+  void Temperature::controllerFan() {
+    static millis_t lastMotorOn = 0, // Last time a motor was turned on
+                    nextMotorCheck = 0; // Last time the state was checked
+    const millis_t ms = millis();
+    if (ELAPSED(ms, nextMotorCheck)) {
+      nextMotorCheck = ms + 2500UL; // Not a time critical function, so only check every 2.5s
+
+      // If any of the drivers or the bed are enabled...
+      if (X_ENABLE_READ == X_ENABLE_ON || Y_ENABLE_READ == Y_ENABLE_ON || Z_ENABLE_READ == Z_ENABLE_ON
+        #if HAS_HEATED_BED
+          || soft_pwm_amount_bed > 0
+        #endif
+          #if HAS_X2_ENABLE
+            || X2_ENABLE_READ == X_ENABLE_ON
+          #endif
+          #if HAS_Y2_ENABLE
+            || Y2_ENABLE_READ == Y_ENABLE_ON
+          #endif
+          #if HAS_Z2_ENABLE
+            || Z2_ENABLE_READ == Z_ENABLE_ON
+          #endif
+          || E0_ENABLE_READ == E_ENABLE_ON
+          #if E_STEPPERS > 1
+            || E1_ENABLE_READ == E_ENABLE_ON
+            #if E_STEPPERS > 2
+                || E2_ENABLE_READ == E_ENABLE_ON
+              #if E_STEPPERS > 3
+                  || E3_ENABLE_READ == E_ENABLE_ON
+                #if E_STEPPERS > 4
+                    || E4_ENABLE_READ == E_ENABLE_ON
+                #endif
+              #endif
+            #endif
+          #endif
+      ) {
+        lastMotorOn = ms; //... set time to NOW so the fan will turn on
+      }
+
+      // Fan off if no steppers have been enabled for CONTROLLERFAN_SECS seconds
+      const uint8_t speed = (lastMotorOn && PENDING(ms, lastMotorOn + (CONTROLLERFAN_SECS) * 1000UL)) ? CONTROLLERFAN_SPEED : 0;
+      
+      #if ENABLED(AUTO_REPORT_FAN_SPEEDS)
+        if (speed != controllerFanSpeed) {
+          controllerFanSpeed = speed;
+          report_controller_fan();
+        }
+      #else
+        controllerFanSpeed = speed;
+      #endif
+
+      // allows digital or PWM fan output to be used (see M42 handling)
+      WRITE(CONTROLLER_FAN_PIN, speed);
+      analogWrite(CONTROLLER_FAN_PIN, speed);
+    }
+  }
+
+#endif // USE_CONTROLLER_FAN
 #if HAS_HEATED_BED
   float Temperature::current_temperature_bed = 0.0;
   int16_t Temperature::current_temperature_bed_raw = 0,
@@ -559,9 +633,16 @@ int Temperature::getHeaterPower(const int heater) {
       const uint8_t bit = pgm_read_byte(&fanBit[f]);
       if (pin >= 0 && !TEST(fanDone, bit)) {
         uint8_t newFanSpeed = TEST(fanState, bit) ? default_autofan_speed : 0;
-        #if ENABLED(AUTO_POWER_E_FANS)
+
+        #if ENABLED(AUTO_REPORT_FAN_SPEEDS)
+          if (newFanSpeed != autofan_speed[f]) {
+            autofan_speed[f] = newFanSpeed;
+            report_auto_fan(f);
+          }
+        #else
           autofan_speed[f] = newFanSpeed;
         #endif
+        
         // this idiom allows both digital and PWM fan outputs (see M42 handling).
         digitalWrite(pin, newFanSpeed);
         analogWrite(pin, newFanSpeed);

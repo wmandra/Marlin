@@ -978,7 +978,7 @@
  *   'M106 P<fan> T2'     : Use the set secondary speed
  *   'M106 P<fan> T1'     : Restore the previous fan speed
  */
-//#define EXTRA_FAN_SPEED
+#define EXTRA_FAN_SPEED
 
 /**
  * Advanced Pause
@@ -1448,6 +1448,11 @@
  * Auto-report temperatures with M155 S<seconds>
  */
 #define AUTO_REPORT_TEMPERATURES
+
+/**
+ * Auto-report fan speeds when changed
+ */
+#define AUTO_REPORT_FANSPEEDS
 
 /**
  * Include capabilities in M115 output

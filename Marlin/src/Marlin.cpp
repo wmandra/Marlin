@@ -491,22 +491,6 @@ float soft_endstop_min[XYZ] = { X_MIN_BED, Y_MIN_BED, Z_MIN_POS },
   #endif
 #endif
 
-#if FAN_COUNT > 0
-  int16_t fanSpeeds[FAN_COUNT] = { 0 };
-  #if ENABLED(EXTRA_FAN_SPEED)
-    int16_t old_fanSpeeds[FAN_COUNT],
-            new_fanSpeeds[FAN_COUNT];
-  #endif
-  #if ENABLED(PROBING_FANS_OFF)
-    bool fans_paused; // = false;
-    int16_t paused_fanSpeeds[FAN_COUNT] = { 0 };
-  #endif
-#endif
-
-#if ENABLED(USE_CONTROLLER_FAN)
-  int controllerFanSpeed; // = 0;
-#endif
-
 // The active extruder (tool). Set with T<extruder> command.
 uint8_t active_extruder; // = 0;
 
@@ -2030,25 +2014,6 @@ void clean_up_after_endstop_or_probe_move() {
 
 #endif // Z_PROBE_ALLEN_KEY
 
-#if ENABLED(PROBING_FANS_OFF)
-
-  void fans_pause(const bool p) {
-    if (p != fans_paused) {
-      fans_paused = p;
-      if (p)
-        for (uint8_t x = 0; x < FAN_COUNT; x++) {
-          paused_fanSpeeds[x] = fanSpeeds[x];
-          set_fan_speed(x, 0);
-        }
-      else
-        for (uint8_t x = 0; x < FAN_COUNT; x++) {
-          set_fan_speed(x, paused_fanSpeeds[x]);
-        }
-    }
-  }
-
-#endif // PROBING_FANS_OFF
-
 #if HAS_BED_PROBE
 
   // TRIGGERED_WHEN_STOWED_TEST can easily be extended to servo probes, ... if needed.
@@ -2066,7 +2031,7 @@ void clean_up_after_endstop_or_probe_move() {
         thermalManager.pause(p);
       #endif
       #if ENABLED(PROBING_FANS_OFF)
-        fans_pause(p);
+        thermalManager.pause_fans(p);
       #endif
       if (p) safe_delay(
         #if DELAY_BEFORE_PROBING > 25
@@ -7623,13 +7588,13 @@ inline void gcode_M42() {
   #if FAN_COUNT > 0
     switch (pin_number) {
       #if HAS_FAN0
-        case FAN_PIN: set_fan_speed(0, pin_status); break;
+        case FAN_PIN: thermalManager.set_fan_speed(0, pin_status); break;
       #endif
       #if HAS_FAN1
-        case FAN1_PIN: set_fan_speed(1, pin_status); break;
+        case FAN1_PIN: thermalManager.set_fan_speed(1, pin_status); break;
       #endif
       #if HAS_FAN2
-        case FAN2_PIN: set_fan_speed(2, pin_status); break;
+        case FAN2_PIN: thermalManager.set_fan_speed(2, pin_status); break;
       #endif
     }
   #endif
@@ -8340,22 +8305,21 @@ inline void gcode_M105() {
         const int16_t t = parser.intval('T');
         if (t > 0) {
           switch (t) {
-            case 1:
-              set_fan_speed(p, old_fanSpeeds[p]);
+            case 1: // use primary speed
+              thermalManager.set_secondary_fan_mode(p, false); 
               break;
-            case 2:
-              old_fanSpeeds[p] = fanSpeeds[p];
-              set_fan_speed(p, new_fanSpeeds[p]);
+            case 2: //use secondary speed
+              thermalManager.set_secondary_fan_mode(p, true);
               break;
             default:
-              new_fanSpeeds[p] = MIN(t, 255);
+              thermalManager.set_secondary_fan_speed(p, MIN(t, 255));
               break;
           }
           return;
         }
       #endif // EXTRA_FAN_SPEED
       const uint16_t s = parser.ushortval('S', 255);
-      set_fan_speed(p, MIN(s, 255U));
+      thermalManager.set_fan_speed(p, MIN(s, 255U));
     }
   }
 
@@ -8369,7 +8333,7 @@ inline void gcode_M105() {
       #endif
       parser.ushortval('P')
     ;
-    if (p < FAN_COUNT) set_fan_speed(p, 0);
+    if (p < FAN_COUNT) thermalManager.set_fan_speed(p, 0);
   }
 
 #endif // FAN_COUNT > 0
@@ -8916,11 +8880,7 @@ inline void gcode_M81() {
   planner.finish_and_disable();
 
   #if FAN_COUNT > 0
-    for (uint8_t i = 0; i < FAN_COUNT; i++) set_fan_speed(i, 0);
-    #if ENABLED(PROBING_FANS_OFF)
-      fans_paused = false;
-      ZERO(paused_fanSpeeds);
-    #endif
+    thermalManager.halt_fans();
   #endif
 
   safe_delay(1000); // Wait 1 second before switching off
@@ -14534,58 +14494,6 @@ void prepare_move_to_destination() {
 
 #endif // BEZIER_CURVE_SUPPORT
 
-#if ENABLED(USE_CONTROLLER_FAN)
-
-  void controllerFan() {
-    static millis_t lastMotorOn = 0, // Last time a motor was turned on
-                    nextMotorCheck = 0; // Last time the state was checked
-    const millis_t ms = millis();
-    if (ELAPSED(ms, nextMotorCheck)) {
-      nextMotorCheck = ms + 2500UL; // Not a time critical function, so only check every 2.5s
-
-      // If any of the drivers or the bed are enabled...
-      if (X_ENABLE_READ == X_ENABLE_ON || Y_ENABLE_READ == Y_ENABLE_ON || Z_ENABLE_READ == Z_ENABLE_ON
-        #if HAS_HEATED_BED
-          || thermalManager.soft_pwm_amount_bed > 0
-        #endif
-          #if HAS_X2_ENABLE
-            || X2_ENABLE_READ == X_ENABLE_ON
-          #endif
-          #if HAS_Y2_ENABLE
-            || Y2_ENABLE_READ == Y_ENABLE_ON
-          #endif
-          #if HAS_Z2_ENABLE
-            || Z2_ENABLE_READ == Z_ENABLE_ON
-          #endif
-          || E0_ENABLE_READ == E_ENABLE_ON
-          #if E_STEPPERS > 1
-            || E1_ENABLE_READ == E_ENABLE_ON
-            #if E_STEPPERS > 2
-                || E2_ENABLE_READ == E_ENABLE_ON
-              #if E_STEPPERS > 3
-                  || E3_ENABLE_READ == E_ENABLE_ON
-                #if E_STEPPERS > 4
-                    || E4_ENABLE_READ == E_ENABLE_ON
-                #endif
-              #endif
-            #endif
-          #endif
-      ) {
-        lastMotorOn = ms; //... set time to NOW so the fan will turn on
-      }
-
-      // Fan off if no steppers have been enabled for CONTROLLERFAN_SECS seconds
-      const uint8_t speed = (lastMotorOn && PENDING(ms, lastMotorOn + (CONTROLLERFAN_SECS) * 1000UL)) ? CONTROLLERFAN_SPEED : 0;
-      controllerFanSpeed = speed;
-
-      // allows digital or PWM fan output to be used (see M42 handling)
-      WRITE(CONTROLLER_FAN_PIN, speed);
-      analogWrite(CONTROLLER_FAN_PIN, speed);
-    }
-  }
-
-#endif // USE_CONTROLLER_FAN
-
 #if ENABLED(MORGAN_SCARA)
 
   /**
@@ -14845,8 +14753,8 @@ void manage_inactivity(const bool ignore_stepper_queue/*=false*/) {
     }
   #endif
 
-  #if ENABLED(USE_CONTROLLER_FAN)
-    controllerFan(); // Check if fan should be turned on to cool stepper drivers down
+  #if HAS_CONTROLLER_FAN
+    thermalManager.controllerFan(); // Check if fan should be turned on to cool stepper drivers down
   #endif
 
   #if ENABLED(AUTO_POWER_CONTROL)
@@ -15047,7 +14955,7 @@ void stop() {
   thermalManager.disable_all_heaters(); // 'unpause' taken care of in here
 
   #if ENABLED(PROBING_FANS_OFF)
-    if (fans_paused) fans_pause(false); // put things back the way they were
+    thermalManager.pause_fans(false); // put things back the way they were
   #endif
 
   if (IsRunning()) {
@@ -15353,9 +15261,7 @@ void loop() {
       quickstop_stepper();
       print_job_timer.stop();
       thermalManager.disable_all_heaters();
-      #if FAN_COUNT > 0
-        for (uint8_t i = 0; i < FAN_COUNT; i++) set_fan_speed(i, 0);
-      #endif
+      thermalManager.halt_fans();
       wait_for_heatup = false;
       #if ENABLED(POWER_LOSS_RECOVERY)
         card.removeJobRecoveryFile();

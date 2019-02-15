@@ -1207,7 +1207,7 @@ void Planner::check_axes_activity() {
   }
   else {
     #if FAN_COUNT > 0
-      for (uint8_t i = 0; i < FAN_COUNT; i++) tail_fan_speed[i] = fanSpeeds[i];
+      for (uint8_t i = 0; i < FAN_COUNT; i++) tail_fan_speed[i] = thermalManager.fanSpeeds[i];
     #endif
 
     #if ENABLED(BARICUDA)
@@ -1784,7 +1784,7 @@ bool Planner::_populate_block(block_t * const block, bool split_move,
   #endif
 
   #if FAN_COUNT > 0
-    for (uint8_t i = 0; i < FAN_COUNT; i++) block->fan_speed[i] = fanSpeeds[i];
+    for (uint8_t i = 0; i < FAN_COUNT; i++) block->fan_speed[i] = thermalManager.fanSpeeds[i];
   #endif
 
   #if ENABLED(BARICUDA)

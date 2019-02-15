@@ -127,12 +127,26 @@ class Temperature {
                    target_temperature[HOTENDS];
     static uint8_t soft_pwm_amount[HOTENDS];
 
-    #if ENABLED(AUTO_POWER_E_FANS)
+    #if HAS_AUTO_FAN
       static int16_t autofan_speed[HOTENDS];
+      static int8_t default_autofan_speed;
     #endif
 
-    #if HAS_AUTO_FAN
-      static int8_t default_autofan_speed = EXTRUDER_AUTO_FAN_SPEED;
+    #if FAN_COUNT > 0
+      static int16_t fanSpeeds[FAN_COUNT];
+      #if ENABLED(EXTRA_FAN_SPEED)
+        static int16_t primary_fanSpeeds[FAN_COUNT],
+                       secondary_fanSpeeds[FAN_COUNT];
+        static bool secondary_fan_mode[FAN_COUNT];
+      #endif
+      #if ENABLED(PROBING_FANS_OFF)
+        static bool fans_paused;
+        static int16_t paused_fanSpeeds[FAN_COUNT];
+      #endif
+    #endif
+
+    #if HAS_CONTROLLER_FAN
+      static int controllerFanSpeed;
     #endif
 
     #if ENABLED(FAN_SOFT_PWM)
@@ -609,6 +623,101 @@ class Temperature {
           next_temp_report_ms = millis() + 1000UL * v;
         }
       #endif
+    #endif
+
+    #if FAN_COUNT > 0
+      #if ENABLED(AUTO_REPORT_FANSPEEDS)
+        FORCE_INLINE static void report_fan_speed(const uint8_t index) {
+          SERIAL_PROTOCOLPAIR("Fanspeed", index);
+          SERIAL_PROTOCOLLNPAIR(":", fanSpeeds[index]);
+        }
+
+        #if HAS_CONTROLLER_FAN
+          FORCE_INLINE static void report_controller_fan() {
+            SERIAL_PROTOCOLLNPAIR("ControllerFanspeed:", controllerFanSpeed);
+          }
+        #endif
+
+        #if HAS_AUTO_FAN
+          FORCE_INLINE static void report_auto_fan(const uint8_t index) {
+            SERIAL_PROTOCOLPAIR("FanspeedE", index);
+            SERIAL_PROTOCOLLNPAIR(":", autofan_speed[index]);
+          }
+        #endif
+      #endif
+
+      static void set_fan_speed(const uint8_t index, const uint16_t speed) {
+        #if ENABLED(EXTRA_FAN_SPEED)
+          if (secondary_fan_mode[index]) {
+            secondary_fanSpeeds[index] = speed;
+          } else {
+            primary_fanSpeeds[index] = speed;
+          }
+        #endif
+        fanSpeeds[index] = speed;
+        
+        #if ENABLED(AUTO_REPORT_FANSPEEDS)
+          report_fan_speed(index);
+        #endif
+      }
+
+      static void halt_fans() {
+        for (uint8_t i = 0; i < FAN_COUNT; i++) set_fan_speed(i, 0);
+        #if ENABLED(PROBING_FANS_OFF)
+          fans_paused = false;
+          ZERO(paused_fanSpeeds);
+        #endif
+      }
+
+      #if ENABLED(ULTRA_LCD)
+        FORCE_INLINE static void lcd_update_fan_speed(const uint8_t index) {
+          #if ENABLED(EXTRA_FAN_SPEED)
+            primary_fanSpeeds[index] = fanSpeeds[index];
+          #endif
+
+          #if ENABLED(AUTO_REPORT_FANSPEEDS)
+            report_fan_speed(index);
+          #endif
+        }
+      #endif
+
+      #if ENABLED(PROBING_FANS_OFF)
+        static void pause_fans(const bool p) {
+          if (p != fans_paused) {
+            fans_paused = p;
+            if (p)
+              for (uint8_t x = 0; x < FAN_COUNT; x++) {
+                paused_fanSpeeds[x] = fanSpeeds[x];
+                set_fan_speed(x, 0);
+             }
+            else
+              for (uint8_t x = 0; x < FAN_COUNT; x++) {
+                set_fan_speed(x, paused_fanSpeeds[x]);
+              }
+          }
+        }
+      #endif // PROBING_FANS_OFF
+
+      #if ENABLED(EXTRA_FAN_SPEED)
+        static void set_secondary_fan_speed(const uint8_t index, const uint16_t speed) {
+          secondary_fanSpeeds[index] = speed;
+        }
+
+        static void set_secondary_fan_mode(const uint8_t index, const bool mode) {
+          if (mode != set_secondary_fan_mode[index]) {
+            if (secondary_fan_mode[index]) {
+              set_fan_speed(index, primary_fanSpeeds[index]);
+              secondary_fan_mode[index] = false;
+            } else {
+              set_fan_speed(index, secondary_fanSpeeds[index]);
+              secondary_fan_mode[index] = true;
+            }
+          }
+        }
+      #endif
+    #endif
+    #if HAS_CONTROLLER_FAN
+      static void controllerFan();
     #endif
 
   private:

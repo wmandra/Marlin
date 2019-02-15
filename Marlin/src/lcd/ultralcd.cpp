@@ -1465,7 +1465,11 @@ void lcd_quick_feedback(const bool clear_buttons) {
 
   // First Fan Speed title in "Tune" and "Control>Temperature" menus
   #if FAN_COUNT > 0 && HAS_FAN0
-    #define _FAN_FUNC(N) print_fan_speed(N)
+    #if ENABLED(AUTO_REPORT_FANSPEEDS)
+      #define _FAN_FUNC(N) thermalManager.lcd_update_fan_speed(N)
+    #else
+      #define _FAN_FUNC(N) NOOP
+    #endif
     void set_fan_speed_callback_F1() { _FAN_FUNC(0); }
     #if FAN_COUNT > 1
       #define FAN_SPEED_1_SUFFIX " 1"
@@ -1558,21 +1562,21 @@ void lcd_quick_feedback(const bool clear_buttons) {
     //
     #if FAN_COUNT > 0
       #if HAS_FAN0
-        MENU_MULTIPLIER_ITEM_EDIT_CALLBACK(int3, MSG_FAN_SPEED FAN_SPEED_1_SUFFIX, &fanSpeeds[0], 0, 255, set_fan_speed_callback_F1);
+        MENU_MULTIPLIER_ITEM_EDIT_CALLBACK(int3, MSG_FAN_SPEED FAN_SPEED_1_SUFFIX, &thermalManager.fanSpeeds[0], 0, 255, set_fan_speed_callback_F1);
         #if ENABLED(EXTRA_FAN_SPEED)
-          MENU_MULTIPLIER_ITEM_EDIT(int3, MSG_EXTRA_FAN_SPEED FAN_SPEED_1_SUFFIX, &new_fanSpeeds[0], 3, 255);
+          MENU_MULTIPLIER_ITEM_EDIT(int3, MSG_EXTRA_FAN_SPEED FAN_SPEED_1_SUFFIX, &thermalManager.secondary_fanSpeeds[0], 3, 255);
         #endif
       #endif
       #if HAS_FAN1
-        MENU_MULTIPLIER_ITEM_EDIT_CALLBACK(int3, MSG_FAN_SPEED " 2", &fanSpeeds[1], 0, 255, set_fan_speed_callback_F2);
+        MENU_MULTIPLIER_ITEM_EDIT_CALLBACK(int3, MSG_FAN_SPEED " 2", &thermalManager.fanSpeeds[1], 0, 255, set_fan_speed_callback_F2);
         #if ENABLED(EXTRA_FAN_SPEED)
-          MENU_MULTIPLIER_ITEM_EDIT(int3, MSG_EXTRA_FAN_SPEED " 2", &new_fanSpeeds[1], 3, 255);
+          MENU_MULTIPLIER_ITEM_EDIT(int3, MSG_EXTRA_FAN_SPEED " 2", &thermalManager.secondary_fanSpeeds[1], 3, 255);
         #endif
       #endif
       #if HAS_FAN2
-        MENU_MULTIPLIER_ITEM_EDIT_CALLBACK(int3, MSG_FAN_SPEED " 3", &fanSpeeds[2], 0, 255, set_fan_speed_callback_F3);
+        MENU_MULTIPLIER_ITEM_EDIT_CALLBACK(int3, MSG_FAN_SPEED " 3", &thermalManager.fanSpeeds[2], 0, 255, set_fan_speed_callback_F3);
         #if ENABLED(EXTRA_FAN_SPEED)
-          MENU_MULTIPLIER_ITEM_EDIT(int3, MSG_EXTRA_FAN_SPEED " 3", &new_fanSpeeds[2], 3, 255);
+          MENU_MULTIPLIER_ITEM_EDIT(int3, MSG_EXTRA_FAN_SPEED " 3", &thermalManager.secondary_fanSpeeds[2], 3, 255);
         #endif
       #endif
     #endif // FAN_COUNT > 0
@@ -1694,9 +1698,9 @@ void lcd_quick_feedback(const bool clear_buttons) {
     #endif
     #if FAN_COUNT > 0
       #if FAN_COUNT > 1
-        set_fan_speed(active_extruder < FAN_COUNT ? active_extruder : 0, fan);
+        thermalManager.set_fan_speed(active_extruder < FAN_COUNT ? active_extruder : 0, fan);
       #else
-        set_fan_speed(0, fan);
+        thermalManager.set_fan_speed(0, fan);
       #endif
     #else
       UNUSED(fan);
@@ -1901,7 +1905,7 @@ void lcd_quick_feedback(const bool clear_buttons) {
 
   void lcd_cooldown() {
     #if FAN_COUNT > 0
-      for (uint8_t i = 0; i < FAN_COUNT; i++) set_fan_speed(i, 0);
+      thermalManager.halt_fans();
     #endif
     thermalManager.disable_all_heaters();
     lcd_return_to_status();
@@ -3614,21 +3618,21 @@ void lcd_quick_feedback(const bool clear_buttons) {
     //
     #if FAN_COUNT > 0
       #if HAS_FAN0
-        MENU_MULTIPLIER_ITEM_EDIT_CALLBACK(int3, MSG_FAN_SPEED FAN_SPEED_1_SUFFIX, &fanSpeeds[0], 0, 255, set_fan_speed_callback_F1);
+        MENU_MULTIPLIER_ITEM_EDIT_CALLBACK(int3, MSG_FAN_SPEED FAN_SPEED_1_SUFFIX, &thermalManager.fanSpeeds[0], 0, 255, set_fan_speed_callback_F1);
         #if ENABLED(EXTRA_FAN_SPEED)
-          MENU_MULTIPLIER_ITEM_EDIT(int3, MSG_EXTRA_FAN_SPEED FAN_SPEED_1_SUFFIX, &new_fanSpeeds[0], 3, 255);
+          MENU_MULTIPLIER_ITEM_EDIT(int3, MSG_EXTRA_FAN_SPEED FAN_SPEED_1_SUFFIX, &thermalManager.secondary_fanSpeeds[0], 3, 255);
         #endif
       #endif
       #if HAS_FAN1
-        MENU_MULTIPLIER_ITEM_EDIT_CALLBACK(int3, MSG_FAN_SPEED " 2", &fanSpeeds[1], 0, 255, set_fan_speed_callback_F2);
+        MENU_MULTIPLIER_ITEM_EDIT_CALLBACK(int3, MSG_FAN_SPEED " 2", &thermalManager.fanSpeeds[1], 0, 255, set_fan_speed_callback_F2);
         #if ENABLED(EXTRA_FAN_SPEED)
-          MENU_MULTIPLIER_ITEM_EDIT(int3, MSG_EXTRA_FAN_SPEED " 2", &new_fanSpeeds[1], 3, 255);
+          MENU_MULTIPLIER_ITEM_EDIT(int3, MSG_EXTRA_FAN_SPEED " 2", &thermalManager.secondary_fanSpeeds[1], 3, 255);
         #endif
       #endif
       #if HAS_FAN2
-        MENU_MULTIPLIER_ITEM_EDIT_CALLBACK(int3, MSG_FAN_SPEED " 3", &fanSpeeds[2], 0, 255, set_fan_speed_callback_F3);
+        MENU_MULTIPLIER_ITEM_EDIT_CALLBACK(int3, MSG_FAN_SPEED " 3", &thermalManager.fanSpeeds[2], 0, 255, set_fan_speed_callback_F3);
         #if ENABLED(EXTRA_FAN_SPEED)
-          MENU_MULTIPLIER_ITEM_EDIT(int3, MSG_EXTRA_FAN_SPEED " 3", &new_fanSpeeds[2], 3, 255);
+          MENU_MULTIPLIER_ITEM_EDIT(int3, MSG_EXTRA_FAN_SPEED " 3", &thermalManager.secondary_fanSpeeds[2], 3, 255);
         #endif
       #endif
     #endif // FAN_COUNT > 0

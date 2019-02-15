@@ -124,14 +124,20 @@
 //
 #define HEATER_0_PIN        2
 #define HEATER_1_PIN        3
-#define HEATER_2_PIN        6
-#define HEATER_3_PIN        8
+#if E0_AUTO_FAN_PIN == -1
+  #define HEATER_2_PIN      6
+#endif
+#define HEATER_3_PIN       -1
 #define HEATER_BED_PIN      9
 
 #ifndef FAN_PIN
   #define FAN_PIN           7
 #endif
-#define FAN1_PIN            8
+#if ENABLED(USE_CONTROLLER_FAN)
+  #define CONTROLLER_FAN_PIN  8
+#else
+  //#define FAN1_PIN            8
+#endif
 
 //
 // Misc. Functions
