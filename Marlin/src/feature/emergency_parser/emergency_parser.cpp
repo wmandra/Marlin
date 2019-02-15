@@ -25,9 +25,6 @@
  */
 
 #include "../../inc/MarlinConfig.h"
-
-#if ENABLED(EMERGENCY_PARSER)
-
 #include "emergency_parser.h"
 
 // Static data members
@@ -36,5 +33,3 @@ EmergencyParser::State EmergencyParser::state; // = EP_RESET
 
 // Global instance
 EmergencyParser emergency_parser;
-
-#endif // EMERGENCY_PARSER

@@ -38,7 +38,7 @@
 #ifndef _ENDSTOP_INTERRUPTS_H_
 #define _ENDSTOP_INTERRUPTS_H_
 
-#include "macros.h"
+#include "../core/macros.h"
 
 // One ISR for all EXT-Interrupts
 void endstop_ISR(void) { endstops.update(); }
@@ -160,66 +160,6 @@ void setup_endstop_interrupts( void ) {
       // Not all used endstop/probe -pins can raise interrupts. Please deactivate ENDSTOP_INTERRUPTS or change the pin configuration!
       static_assert(digitalPinToPCICR(Z_MIN_PIN) != NULL, "Z_MIN_PIN is not interrupt-capable");
       pciSetup(Z_MIN_PIN);
-    #endif
-  #endif
-
-  #if HAS_X2_MAX
-    #if (digitalPinToInterrupt(X2_MAX_PIN) != NOT_AN_INTERRUPT)
-      attachInterrupt(digitalPinToInterrupt(X2_MAX_PIN), endstop_ISR, CHANGE);
-    #else
-      // Not all used endstop/probe -pins can raise interrupts. Please deactivate ENDSTOP_INTERRUPTS or change the pin configuration!
-      static_assert(digitalPinToPCICR(X2_MAX_PIN) != NULL, "X2_MAX_PIN is not interrupt-capable");
-      pciSetup(X2_MAX_PIN);
-    #endif
-  #endif
-
-  #if HAS_X2_MIN
-    #if (digitalPinToInterrupt(X2_MIN_PIN) != NOT_AN_INTERRUPT)
-      attachInterrupt(digitalPinToInterrupt(X2_MIN_PIN), endstop_ISR, CHANGE);
-    #else
-      // Not all used endstop/probe -pins can raise interrupts. Please deactivate ENDSTOP_INTERRUPTS or change the pin configuration!
-      static_assert(digitalPinToPCICR(X2_MIN_PIN) != NULL, "X2_MIN_PIN is not interrupt-capable");
-      pciSetup(X2_MIN_PIN);
-    #endif
-  #endif
-
-  #if HAS_Y2_MAX
-    #if (digitalPinToInterrupt(Y2_MAX_PIN) != NOT_AN_INTERRUPT)
-      attachInterrupt(digitalPinToInterrupt(Y2_MAX_PIN), endstop_ISR, CHANGE);
-    #else
-      // Not all used endstop/probe -pins can raise interrupts. Please deactivate ENDSTOP_INTERRUPTS or change the pin configuration!
-      static_assert(digitalPinToPCICR(Y2_MAX_PIN) != NULL, "Y2_MAX_PIN is not interrupt-capable");
-      pciSetup(Y2_MAX_PIN);
-    #endif
-  #endif
-
-  #if HAS_Y2_MIN
-    #if (digitalPinToInterrupt(Y2_MIN_PIN) != NOT_AN_INTERRUPT)
-      attachInterrupt(digitalPinToInterrupt(Y2_MIN_PIN), endstop_ISR, CHANGE);
-    #else
-      // Not all used endstop/probe -pins can raise interrupts. Please deactivate ENDSTOP_INTERRUPTS or change the pin configuration!
-      static_assert(digitalPinToPCICR(Y2_MIN_PIN) != NULL, "Y2_MIN_PIN is not interrupt-capable");
-      pciSetup(Y2_MIN_PIN);
-    #endif
-  #endif
-
-  #if HAS_Z2_MAX
-    #if digitalPinToInterrupt(Z2_MAX_PIN) != NOT_AN_INTERRUPT
-      attachInterrupt(digitalPinToInterrupt(Z2_MAX_PIN), endstop_ISR, CHANGE);
-    #else
-      // Not all used endstop/probe -pins can raise interrupts. Please deactivate ENDSTOP_INTERRUPTS or change the pin configuration!
-      static_assert(digitalPinToPCICR(Z2_MAX_PIN) != NULL, "Z2_MAX_PIN is not interrupt-capable");
-      pciSetup(Z2_MAX_PIN);
-    #endif
-  #endif
-
-  #if HAS_Z2_MIN
-    #if digitalPinToInterrupt(Z2_MIN_PIN) != NOT_AN_INTERRUPT
-      attachInterrupt(digitalPinToInterrupt(Z2_MIN_PIN), endstop_ISR, CHANGE);
-    #else
-      // Not all used endstop/probe -pins can raise interrupts. Please deactivate ENDSTOP_INTERRUPTS or change the pin configuration!
-      static_assert(digitalPinToPCICR(Z2_MIN_PIN) != NULL, "Z2_MIN_PIN is not interrupt-capable");
-      pciSetup(Z2_MIN_PIN);
     #endif
   #endif
 

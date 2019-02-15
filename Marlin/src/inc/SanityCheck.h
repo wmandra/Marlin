@@ -238,22 +238,12 @@
   #error "LIN_ADVANCE (1.5) no longer uses LIN_ADVANCE_E_D_RATIO. Check your configuration."
 #elif defined(NEOPIXEL_RGBW_LED)
   #error "NEOPIXEL_RGBW_LED is now NEOPIXEL_LED. Please update your configuration."
-#elif ENABLED(DELTA) && defined(DELTA_PROBEABLE_RADIUS)
-  #error "Remove DELTA_PROBEABLE_RADIUS and use MIN_PROBE_EDGE to inset the probe area instead."
-#elif defined(UBL_MESH_INSET)
-  #error "UBL_MESH_INSET is now just MESH_INSET. Please update your configuration."
-#elif defined(UBL_MESH_MIN_X) || defined(UBL_MESH_MIN_Y) || defined(UBL_MESH_MAX_X)  || defined(UBL_MESH_MAX_Y)
-  #error "UBL_MESH_(MIN|MAX)_[XY] is now just MESH_(MIN|MAX)_[XY]. Please update your configuration."
 #elif defined(ABL_PROBE_PT_1_X) || defined(ABL_PROBE_PT_1_Y) || defined(ABL_PROBE_PT_2_X) || defined(ABL_PROBE_PT_2_Y) || defined(ABL_PROBE_PT_3_X) || defined(ABL_PROBE_PT_3_Y)
   #error "ABL_PROBE_PT_[123]_[XY] is now PROBE_PT_[123]_[XY]. Please update your configuration."
-#elif defined(UBL_PROBE_PT_1_X) || defined(UBL_PROBE_PT_1_Y) || defined(UBL_PROBE_PT_2_X) || defined(UBL_PROBE_PT_2_Y) || defined(UBL_PROBE_PT_3_X) || defined(UBL_PROBE_PT_3_Y)
-  #error "UBL_PROBE_PT_[123]_[XY] is now PROBE_PT_[123]_[XY]. Please update your configuration."
 #elif defined(ENABLE_MESH_EDIT_GFX_OVERLAY)
   #error "ENABLE_MESH_EDIT_GFX_OVERLAY is now MESH_EDIT_GFX_OVERLAY. Please update your configuration."
 #elif defined(BABYSTEP_ZPROBE_GFX_REVERSE)
   #error "BABYSTEP_ZPROBE_GFX_REVERSE is now set by OVERLAY_GFX_REVERSE. Please update your configurations."
-#elif defined(UBL_GRANULAR_SEGMENTATION_FOR_CARTESIAN)
-  #error "UBL_GRANULAR_SEGMENTATION_FOR_CARTESIAN is now SEGMENT_LEVELED_MOVES. Please update your configuration."
 #elif HAS_PID_HEATING && (defined(K1) || !defined(PID_K1))
   #error "K1 is now PID_K1. Please update your configuration."
 #elif defined(PROBE_DOUBLE_TOUCH)
@@ -272,19 +262,19 @@
   #error "HAVE_TMC2130 is now [AXIS]_DRIVER_TYPE TMC2130. Please update your Configuration.h."
 #elif defined(HAVE_L6470DRIVER)
   #error "HAVE_L6470DRIVER is now [AXIS]_DRIVER_TYPE L6470. Please update your Configuration.h."
-#elif defined(X_IS_TMC) || defined(X2_IS_TMC) || defined(Y_IS_TMC) || defined(Y2_IS_TMC) || defined(Z_IS_TMC) || defined(Z2_IS_TMC) \
+#elif defined(X_IS_TMC) || defined(Y_IS_TMC) || defined(Z_IS_TMC) \
    || defined(E0_IS_TMC) || defined(E1_IS_TMC) || defined(E2_IS_TMC) || defined(E3_IS_TMC) || defined(E4_IS_TMC)
   #error "[AXIS]_IS_TMC is now [AXIS]_DRIVER_TYPE TMC26X. Please update your Configuration.h."
-#elif defined(X_IS_TMC26X) || defined(X2_IS_TMC26X) || defined(Y_IS_TMC26X) || defined(Y2_IS_TMC26X) || defined(Z_IS_TMC26X) || defined(Z2_IS_TMC26X) \
+#elif defined(X_IS_TMC26X) || defined(Y_IS_TMC26X) || defined(Z_IS_TMC26X) \
    || defined(E0_IS_TMC26X) || defined(E1_IS_TMC26X) || defined(E2_IS_TMC26X) || defined(E3_IS_TMC26X) || defined(E4_IS_TMC26X)
   #error "[AXIS]_IS_TMC26X is now [AXIS]_DRIVER_TYPE TMC26X. Please update your Configuration.h."
-#elif defined(X_IS_TMC2130) || defined(X2_IS_TMC2130) || defined(Y_IS_TMC2130) || defined(Y2_IS_TMC2130) || defined(Z_IS_TMC2130) || defined(Z2_IS_TMC2130) \
+#elif defined(X_IS_TMC2130) || defined(Y_IS_TMC2130) || defined(Z_IS_TMC2130) \
    || defined(E0_IS_TMC2130) || defined(E1_IS_TMC2130) || defined(E2_IS_TMC2130) || defined(E3_IS_TMC2130) || defined(E4_IS_TMC2130)
   #error "[AXIS]_IS_TMC2130 is now [AXIS]_DRIVER_TYPE TMC2130. Please update your Configuration.h."
-#elif defined(X_IS_TMC2208) || defined(X2_IS_TMC2208) || defined(Y_IS_TMC2208) || defined(Y2_IS_TMC2208) || defined(Z_IS_TMC2208) || defined(Z2_IS_TMC2208) \
+#elif defined(X_IS_TMC2208) || defined(Y_IS_TMC2208) || defined(Z_IS_TMC2208) \
    || defined(E0_IS_TMC2208) || defined(E1_IS_TMC2208) || defined(E2_IS_TMC2208) || defined(E3_IS_TMC2208) || defined(E4_IS_TMC2208)
   #error "[AXIS]_IS_TMC2208 is now [AXIS]_DRIVER_TYPE TMC2208. Please update your Configuration.h."
-#elif defined(X_IS_L6470) || defined(X2_IS_L6470) || defined(Y_IS_L6470) || defined(Y2_IS_L6470) || defined(Z_IS_L6470) || defined(Z2_IS_L6470) \
+#elif defined(X_IS_L6470) || defined(Y_IS_L6470) || defined(Z_IS_L6470) \
    || defined(E0_IS_L6470) || defined(E1_IS_L6470) || defined(E2_IS_L6470) || defined(E3_IS_L6470) || defined(E4_IS_L6470)
   #error "[AXIS]_IS_L6470 is now [AXIS]_DRIVER_TYPE L6470. Please update your Configuration.h."
 #elif defined(AUTOMATIC_CURRENT_CONTROL)
@@ -309,11 +299,9 @@
   #error "MAX7219_DEBUG_STEPPER_QUEUE is now MAX7219_DEBUG_PLANNER_QUEUE. Please update your configuration."
 #endif
 
-#define BOARD_MKS_13     -47
-#define BOARD_TRIGORILLA -343
-#if MB(MKS_13)
+#if MOTHERBOARD == -47
   #error "BOARD_MKS_13 has been renamed BOARD_MKS_GEN_13. Please update your configuration."
-#elif MB(BOARD_TRIGORILLA)
+#elif MOTHERBOARD == -343
   #error "BOARD_TRIGORILLA has been renamed BOARD_TRIGORILLA_13. Please update your configuration."
 #endif
 
@@ -360,19 +348,6 @@
 #endif
 
 /**
- * Dual Stepper Drivers
- */
-#if ENABLED(X_DUAL_STEPPER_DRIVERS) && ENABLED(DUAL_X_CARRIAGE)
-  #error "DUAL_X_CARRIAGE is not compatible with X_DUAL_STEPPER_DRIVERS."
-#elif ENABLED(X_DUAL_STEPPER_DRIVERS) && (!HAS_X2_ENABLE || !HAS_X2_STEP || !HAS_X2_DIR)
-  #error "X_DUAL_STEPPER_DRIVERS requires X2 pins (and an extra E plug)."
-#elif ENABLED(Y_DUAL_STEPPER_DRIVERS) && (!HAS_Y2_ENABLE || !HAS_Y2_STEP || !HAS_Y2_DIR)
-  #error "Y_DUAL_STEPPER_DRIVERS requires Y2 pins (and an extra E plug)."
-#elif ENABLED(Z_DUAL_STEPPER_DRIVERS) && (!HAS_Z2_ENABLE || !HAS_Z2_STEP || !HAS_Z2_DIR)
-  #error "Z_DUAL_STEPPER_DRIVERS requires Z2 pins (and an extra E plug)."
-#endif
-
-/**
  * Validate that the bed size fits
  */
 static_assert(X_MAX_LENGTH >= X_BED_SIZE && Y_MAX_LENGTH >= Y_BED_SIZE,
@@ -382,17 +357,13 @@ static_assert(X_MAX_LENGTH >= X_BED_SIZE && Y_MAX_LENGTH >= Y_BED_SIZE,
  * Granular software endstops (Marlin >= 1.1.7)
  */
 #if ENABLED(MIN_SOFTWARE_ENDSTOPS) && DISABLED(MIN_SOFTWARE_ENDSTOP_Z)
-  #if IS_KINEMATIC
-    #error "MIN_SOFTWARE_ENDSTOPS on DELTA/SCARA also requires MIN_SOFTWARE_ENDSTOP_Z."
-  #elif DISABLED(MIN_SOFTWARE_ENDSTOP_X) && DISABLED(MIN_SOFTWARE_ENDSTOP_Y)
+  #if DISABLED(MIN_SOFTWARE_ENDSTOP_X) && DISABLED(MIN_SOFTWARE_ENDSTOP_Y)
     #error "MIN_SOFTWARE_ENDSTOPS requires at least one of the MIN_SOFTWARE_ENDSTOP_[XYZ] options."
   #endif
 #endif
 
 #if ENABLED(MAX_SOFTWARE_ENDSTOPS) && DISABLED(MAX_SOFTWARE_ENDSTOP_Z)
-  #if IS_KINEMATIC
-    #error "MAX_SOFTWARE_ENDSTOPS on DELTA/SCARA also requires MAX_SOFTWARE_ENDSTOP_Z."
-  #elif DISABLED(MAX_SOFTWARE_ENDSTOP_X) && DISABLED(MAX_SOFTWARE_ENDSTOP_Y)
+  #if DISABLED(MAX_SOFTWARE_ENDSTOP_X) && DISABLED(MAX_SOFTWARE_ENDSTOP_Y)
     #error "MAX_SOFTWARE_ENDSTOPS requires at least one of the MAX_SOFTWARE_ENDSTOP_[XYZ] options."
   #endif
 #endif
@@ -449,27 +420,10 @@ static_assert(X_MAX_LENGTH >= X_BED_SIZE && Y_MAX_LENGTH >= Y_BED_SIZE,
 #endif
 
 /**
- * I2C Position Encoders
- */
-#if ENABLED(I2C_POSITION_ENCODERS)
-  #if DISABLED(BABYSTEPPING) || DISABLED(BABYSTEP_XY)
-    #error "I2C_POSITION_ENCODERS requires BABYSTEPPING and BABYSTEP_XY."
-  #elif !WITHIN(I2CPE_ENCODER_CNT, 1, 5)
-    #error "I2CPE_ENCODER_CNT must be between 1 and 5."
-  #endif
-#endif
-
-/**
  * Babystepping
  */
 #if ENABLED(BABYSTEPPING)
-  #if ENABLED(SCARA)
-    #error "BABYSTEPPING is not implemented for SCARA yet."
-  #elif ENABLED(HANGPRINTER)
-    #error "BABYSTEPPING is not implemented for HANGPRINTER."
-  #elif ENABLED(DELTA) && ENABLED(BABYSTEP_XY)
-    #error "BABYSTEPPING only implemented for Z axis on deltabots."
-  #elif ENABLED(BABYSTEP_ZPROBE_OFFSET) && ENABLED(MESH_BED_LEVELING)
+  #if ENABLED(BABYSTEP_ZPROBE_OFFSET) && ENABLED(MESH_BED_LEVELING)
     #error "MESH_BED_LEVELING and BABYSTEP_ZPROBE_OFFSET is not a valid combination"
   #elif ENABLED(BABYSTEP_ZPROBE_OFFSET) && !HAS_BED_PROBE
     #error "BABYSTEP_ZPROBE_OFFSET requires a probe."
@@ -527,17 +481,6 @@ static_assert(X_MAX_LENGTH >= X_BED_SIZE && Y_MAX_LENGTH >= Y_BED_SIZE,
 #endif
 
 /**
- * Individual axis homing is useless for DELTAS
- */
-#if ENABLED(INDIVIDUAL_AXIS_HOMING_MENU)
-  #if ENABLED(DELTA)
-    #error "INDIVIDUAL_AXIS_HOMING_MENU is incompatible with DELTA kinematics."
-  #elif ENABLED(HANGPRINTER)
-    #error "INDIVIDUAL_AXIS_HOMING_MENU is incompatible with HANGPRINTER kinematics."
-  #endif
-#endif
-
-/**
  * Options only for EXTRUDERS > 1
  */
 #if EXTRUDERS > 1
@@ -558,13 +501,6 @@ static_assert(X_MAX_LENGTH >= X_BED_SIZE && Y_MAX_LENGTH >= Y_BED_SIZE,
   #error "MK2_MULTIPLEXER requires 2 or more EXTRUDERS."
 #elif ENABLED(SINGLENOZZLE)
   #error "SINGLENOZZLE requires 2 or more EXTRUDERS."
-#endif
-
-/**
- * Sanity checking for the Průša MK2 Multiplexer
- */
-#ifdef SNMM
-  #error "SNMM is now MK2_MULTIPLEXER. Please update your configuration."
 #endif
 
 /**
@@ -657,20 +593,6 @@ static_assert(X_MAX_LENGTH >= X_BED_SIZE && Y_MAX_LENGTH >= Y_BED_SIZE,
 #endif
 
 /**
- * Limited number of servos
- */
-#if NUM_SERVOS > 4
-  #error "The maximum number of SERVOS in Marlin is 4."
-#endif
-
-/**
- * Servo deactivation depends on servo endstops, switching nozzle, or switching extruder
- */
-#if ENABLED(DEACTIVATE_SERVOS_AFTER_MOVE) && !HAS_Z_SERVO_PROBE && !defined(SWITCHING_NOZZLE_SERVO_NR) && !defined(SWITCHING_EXTRUDER_SERVO_NR)
-  #error "Z_PROBE_SERVO_NR, switching nozzle, or switching extruder is required for DEACTIVATE_SERVOS_AFTER_MOVE."
-#endif
-
-/**
  * Required LCD language
  */
 #if DISABLED(DOGLCD) && ENABLED(ULTRA_LCD) && !defined(DISPLAY_CHARSET_HD44780)
@@ -692,65 +614,13 @@ static_assert(X_MAX_LENGTH >= X_BED_SIZE && Y_MAX_LENGTH >= Y_BED_SIZE,
  * Allow only one kinematic type to be defined
  */
 #if 1 < 0 \
-  + ENABLED(HANGPRINTER) \
-  + ENABLED(DELTA) \
-  + ENABLED(MORGAN_SCARA) \
-  + ENABLED(MAKERARM_SCARA) \
   + ENABLED(COREXY) \
   + ENABLED(COREXZ) \
   + ENABLED(COREYZ) \
   + ENABLED(COREYX) \
   + ENABLED(COREZX) \
   + ENABLED(COREZY)
-  #error "Please enable only one of HANGPRINTER, DELTA, MORGAN_SCARA, MAKERARM_SCARA, COREXY, COREYX, COREXZ, COREZX, COREYZ, or COREZY."
-#endif
-
-/**
- * Delta requirements
- */
-#if ENABLED(DELTA)
-  #if DISABLED(USE_XMAX_PLUG) && DISABLED(USE_YMAX_PLUG) && DISABLED(USE_ZMAX_PLUG)
-    #error "You probably want to use Max Endstops for DELTA!"
-  #elif ENABLED(ENABLE_LEVELING_FADE_HEIGHT) && DISABLED(AUTO_BED_LEVELING_BILINEAR) && !UBL_SEGMENTED
-    #error "ENABLE_LEVELING_FADE_HEIGHT on DELTA requires AUTO_BED_LEVELING_BILINEAR or AUTO_BED_LEVELING_UBL."
-  #elif ENABLED(DELTA_AUTO_CALIBRATION) && !(HAS_BED_PROBE || ENABLED(ULTIPANEL))
-    #error "DELTA_AUTO_CALIBRATION requires a probe or LCD Controller."
-  #elif ABL_GRID
-    #if (GRID_MAX_POINTS_X & 1) == 0 || (GRID_MAX_POINTS_Y & 1) == 0
-      #error "DELTA requires GRID_MAX_POINTS_X and GRID_MAX_POINTS_Y to be odd numbers."
-    #elif GRID_MAX_POINTS_X < 3
-      #error "DELTA requires GRID_MAX_POINTS_X and GRID_MAX_POINTS_Y to be 3 or higher."
-    #endif
-  #endif
-#endif
-
-/**
- * Hangprinter requirements
- */
-#if ENABLED(HANGPRINTER)
-  #if EXTRUDERS > 4
-    #error "Marlin supports a maximum of 4 EXTRUDERS when driving a Hangprinter."
-  #elif ENABLED(CONVENTIONAL_GEOMETRY)
-    #if ANCHOR_A_Y > 0
-      #error "ANCHOR_A_Y should be negative by convention."
-    #elif (ANCHOR_B_X) * (ANCHOR_C_X) > 0
-      #error "ANCHOR_B_X and ANCHOR_C_X should have opposite signs by convention."
-    #elif ANCHOR_B_Y < 0
-      #error "ANCHOR_B_Y should be positive by convention."
-    #elif ANCHOR_C_Y < 0
-      #error "ANCHOR_C_Y should be positive by convention."
-    #elif ANCHOR_A_Z > 0
-      #error "ANCHOR_A_Z should be negative by convention."
-    #elif ANCHOR_B_Z > 0
-      #error "ANCHOR_B_Z should be negative by convention."
-    #elif ANCHOR_C_Z > 0
-      #error "ANCHOR_C_Z should be negative by convention."
-    #elif ANCHOR_D_Z < 0
-      #error "ANCHOR_D_Z should be positive by convention."
-    #endif
-  #endif
-#elif ENABLED(LINE_BUILDUP_COMPENSATION_FEATURE)
-  #error "LINE_BUILDUP_COMPENSATION_FEATURE is only compatible with HANGPRINTER."
+  #error "Please enable only one of COREXY, COREYX, COREXZ, COREZX, COREYZ, or COREZY."
 #endif
 
 /**
@@ -770,22 +640,12 @@ static_assert(X_MAX_LENGTH >= X_BED_SIZE && Y_MAX_LENGTH >= Y_BED_SIZE,
 #if 1 < 0 \
   + ENABLED(PROBE_MANUALLY) \
   + ENABLED(FIX_MOUNTED_PROBE) \
-  + (HAS_Z_SERVO_PROBE && DISABLED(BLTOUCH)) \
   + ENABLED(BLTOUCH) \
-  + ENABLED(SOLENOID_PROBE) \
-  + ENABLED(Z_PROBE_ALLEN_KEY) \
-  + ENABLED(Z_PROBE_SLED)
-  #error "Please enable only one probe option: PROBE_MANUALLY, FIX_MOUNTED_PROBE, BLTOUCH, SOLENOID_PROBE, Z_PROBE_ALLEN_KEY, Z_PROBE_SLED, or Z Servo."
+  + ENABLED(SOLENOID_PROBE)
+  #error "Please enable only one probe option: PROBE_MANUALLY, FIX_MOUNTED_PROBE, BLTOUCH, or SOLENOID_PROBE."
 #endif
 
 #if HAS_BED_PROBE
-
-  /**
-   * Z_PROBE_SLED is incompatible with DELTA
-   */
-  #if ENABLED(Z_PROBE_SLED) && ENABLED(DELTA)
-    #error "You cannot use Z_PROBE_SLED with DELTA."
-  #endif
 
   /**
    * SOLENOID_PROBE requirements
@@ -795,25 +655,6 @@ static_assert(X_MAX_LENGTH >= X_BED_SIZE && Y_MAX_LENGTH >= Y_BED_SIZE,
       #error "SOLENOID_PROBE is incompatible with EXT_SOLENOID."
     #elif !HAS_SOLENOID_1
       #error "SOLENOID_PROBE requires SOL1_PIN. It can be added to your Configuration.h."
-    #endif
-  #endif
-
-  /**
-   * NUM_SERVOS is required for a Z servo probe
-   */
-  #if HAS_Z_SERVO_PROBE
-    #ifndef NUM_SERVOS
-      #error "You must set NUM_SERVOS for a Z servo probe (Z_PROBE_SERVO_NR)."
-    #elif Z_PROBE_SERVO_NR == 0 && !PIN_EXISTS(SERVO0)
-      #error "SERVO0_PIN must be defined for your servo or BLTOUCH probe."
-    #elif Z_PROBE_SERVO_NR == 1 && !PIN_EXISTS(SERVO1)
-      #error "SERVO1_PIN must be defined for your servo or BLTOUCH probe."
-    #elif Z_PROBE_SERVO_NR == 2 && !PIN_EXISTS(SERVO2)
-      #error "SERVO2_PIN must be defined for your servo or BLTOUCH probe."
-    #elif Z_PROBE_SERVO_NR == 3 && !PIN_EXISTS(SERVO3)
-      #error "SERVO3_PIN must be defined for your servo or BLTOUCH probe."
-    #elif Z_PROBE_SERVO_NR >= NUM_SERVOS
-      #error "Z_PROBE_SERVO_NR must be smaller than NUM_SERVOS."
     #endif
   #endif
 
@@ -870,11 +711,11 @@ static_assert(X_MAX_LENGTH >= X_BED_SIZE && Y_MAX_LENGTH >= Y_BED_SIZE,
    * Require some kind of probe for bed leveling and probe testing
    */
   #if OLDSCHOOL_ABL && !PROBE_SELECTED
-    #error "Auto Bed Leveling requires one of these: PROBE_MANUALLY, FIX_MOUNTED_PROBE, BLTOUCH, SOLENOID_PROBE, Z_PROBE_ALLEN_KEY, Z_PROBE_SLED, or a Z Servo."
+    #error "Auto Bed Leveling requires one of these: PROBE_MANUALLY, FIX_MOUNTED_PROBE, BLTOUCH, or SOLENOID_PROBE."
   #endif
 
   #if ENABLED(Z_MIN_PROBE_REPEATABILITY_TEST)
-    #error "Z_MIN_PROBE_REPEATABILITY_TEST requires a probe: FIX_MOUNTED_PROBE, BLTOUCH, SOLENOID_PROBE, Z_PROBE_ALLEN_KEY, Z_PROBE_SLED, or Z Servo."
+    #error "Z_MIN_PROBE_REPEATABILITY_TEST requires a probe: FIX_MOUNTED_PROBE, BLTOUCH, or SOLENOID_PROBE."
   #endif
 
 #endif
@@ -884,57 +725,16 @@ static_assert(X_MAX_LENGTH >= X_BED_SIZE && Y_MAX_LENGTH >= Y_BED_SIZE,
  */
 #if 1 < 0 \
   + ENABLED(AUTO_BED_LEVELING_LINEAR) \
-  + ENABLED(AUTO_BED_LEVELING_3POINT) \
   + ENABLED(AUTO_BED_LEVELING_BILINEAR) \
-  + ENABLED(AUTO_BED_LEVELING_UBL) \
   + ENABLED(MESH_BED_LEVELING)
-  #error "Select only one of: MESH_BED_LEVELING, AUTO_BED_LEVELING_LINEAR, AUTO_BED_LEVELING_3POINT, AUTO_BED_LEVELING_BILINEAR or AUTO_BED_LEVELING_UBL."
+  #error "Select only one of: MESH_BED_LEVELING, AUTO_BED_LEVELING_LINEAR, or AUTO_BED_LEVELING_BILINEAR."
 #endif
 
 /**
  * Bed Leveling Requirements
  */
 
-#if ENABLED(AUTO_BED_LEVELING_UBL) || ENABLED(AUTO_BED_LEVELING_3POINT)
-  static_assert(WITHIN(PROBE_PT_1_X, MIN_PROBE_X, MAX_PROBE_X), "PROBE_PT_1_X is outside the probe region.");
-  static_assert(WITHIN(PROBE_PT_2_X, MIN_PROBE_X, MAX_PROBE_X), "PROBE_PT_2_X is outside the probe region.");
-  static_assert(WITHIN(PROBE_PT_3_X, MIN_PROBE_X, MAX_PROBE_X), "PROBE_PT_3_X is outside the probe region.");
-  static_assert(WITHIN(PROBE_PT_1_Y, MIN_PROBE_Y, MAX_PROBE_Y), "PROBE_PT_1_Y is outside the probe region.");
-  static_assert(WITHIN(PROBE_PT_2_Y, MIN_PROBE_Y, MAX_PROBE_Y), "PROBE_PT_2_Y is outside the probe region.");
-  static_assert(WITHIN(PROBE_PT_3_Y, MIN_PROBE_Y, MAX_PROBE_Y), "PROBE_PT_3_Y is outside the probe region.");
-#endif
-
-#if ENABLED(AUTO_BED_LEVELING_UBL)
-
-  /**
-   * Unified Bed Leveling
-   */
-
-  // Hide PROBE_MANUALLY from the rest of the code
-  #undef PROBE_MANUALLY
-
-  #if IS_SCARA
-    #error "AUTO_BED_LEVELING_UBL does not yet support SCARA printers."
-  #elif DISABLED(EEPROM_SETTINGS)
-    #error "AUTO_BED_LEVELING_UBL requires EEPROM_SETTINGS. Please update your configuration."
-  #elif !WITHIN(GRID_MAX_POINTS_X, 3, 15) || !WITHIN(GRID_MAX_POINTS_Y, 3, 15)
-    #error "GRID_MAX_POINTS_[XY] must be a whole number between 3 and 15."
-  #elif !defined(RESTORE_LEVELING_AFTER_G28)
-    #error "AUTO_BED_LEVELING_UBL used to enable RESTORE_LEVELING_AFTER_G28. To keep this behavior enable RESTORE_LEVELING_AFTER_G28. Otherwise define it as 'false'."
-  #endif
-
-#elif OLDSCHOOL_ABL
-
-  /**
-   * Auto Bed Leveling
-   */
-
-  /**
-   * Delta and SCARA have limited bed leveling options
-   */
-  #if IS_SCARA && DISABLED(AUTO_BED_LEVELING_BILINEAR)
-    #error "SCARA machines can only use the AUTO_BED_LEVELING_BILINEAR leveling option."
-  #endif
+#if OLDSCHOOL_ABL
 
   /**
    * Check auto bed leveling probe points
@@ -959,9 +759,7 @@ static_assert(X_MAX_LENGTH >= X_BED_SIZE && Y_MAX_LENGTH >= Y_BED_SIZE,
    * Mesh Bed Leveling
    */
 
-  #if ENABLED(DELTA)
-    #error "MESH_BED_LEVELING is not compatible with DELTA printers."
-  #elif GRID_MAX_POINTS_X > 9 || GRID_MAX_POINTS_Y > 9
+  #if GRID_MAX_POINTS_X > 9 || GRID_MAX_POINTS_Y > 9
     #error "GRID_MAX_POINTS_X and GRID_MAX_POINTS_Y must be less than 10 for MBL."
   #endif
 
@@ -998,8 +796,6 @@ static_assert(X_MAX_LENGTH >= X_BED_SIZE && Y_MAX_LENGTH >= Y_BED_SIZE,
 #if ENABLED(CODEPENDENT_XY_HOMING)
   #if ENABLED(QUICK_HOME)
     #error "QUICK_HOME is incompatible with CODEPENDENT_XY_HOMING."
-  #elif IS_KINEMATIC
-    #error "CODEPENDENT_XY_HOMING requires a Cartesian setup."
   #endif
 #endif
 
@@ -1057,33 +853,6 @@ static_assert(X_MAX_LENGTH >= X_BED_SIZE && Y_MAX_LENGTH >= Y_BED_SIZE,
     #error "Only enable one SAV_3DGLCD display type: U8GLIB_SSD1306 or U8GLIB_SH1106."
   #endif
 #endif
-
-/**
- * Allen Key
- * Deploying the Allen Key probe uses big moves in z direction. Too dangerous for an unhomed z-axis.
- */
-#if ENABLED(Z_PROBE_ALLEN_KEY) && (Z_HOME_DIR < 0) && ENABLED(Z_MIN_PROBE_USES_Z_MIN_ENDSTOP_PIN)
-  #error "You can't home to a z min endstop with a Z_PROBE_ALLEN_KEY"
-#endif
-
-/**
- * Dual X Carriage requirements
- */
-#if ENABLED(DUAL_X_CARRIAGE)
-  #if EXTRUDERS == 1
-    #error "DUAL_X_CARRIAGE requires 2 (or more) extruders."
-  #elif CORE_IS_XY || CORE_IS_XZ
-    #error "DUAL_X_CARRIAGE cannot be used with COREXY, COREYX, COREXZ, or COREZX."
-  #elif !HAS_X2_ENABLE || !HAS_X2_STEP || !HAS_X2_DIR
-    #error "DUAL_X_CARRIAGE requires X2 stepper pins to be defined."
-  #elif !HAS_X_MAX
-    #error "DUAL_X_CARRIAGE requires USE_XMAX_PLUG and an X Max Endstop."
-  #elif !defined(X2_HOME_POS) || !defined(X2_MIN_POS) || !defined(X2_MAX_POS)
-    #error "DUAL_X_CARRIAGE requires X2_HOME_POS, X2_MIN_POS, and X2_MAX_POS."
-  #elif X_HOME_DIR != -1 || X2_HOME_DIR != 1
-    #error "DUAL_X_CARRIAGE requires X_HOME_DIR -1 and X2_HOME_DIR 1."
-  #endif
-#endif // DUAL_X_CARRIAGE
 
 /**
  * Make sure auto fan pins don't conflict with the fan pin
@@ -1216,23 +985,6 @@ static_assert(X_MAX_LENGTH >= X_BED_SIZE && Y_MAX_LENGTH >= Y_BED_SIZE,
 #endif
 
 /**
- * Basic 2-nozzle duplication mode
- */
-#if ENABLED(DUAL_NOZZLE_DUPLICATION_MODE)
-  #if HOTENDS != 2
-    #error "DUAL_NOZZLE_DUPLICATION_MODE requires exactly 2 hotends."
-  #elif ENABLED(DUAL_X_CARRIAGE)
-    #error "DUAL_NOZZLE_DUPLICATION_MODE is incompatible with DUAL_X_CARRIAGE."
-  #elif ENABLED(SINGLENOZZLE)
-    #error "DUAL_NOZZLE_DUPLICATION_MODE is incompatible with SINGLENOZZLE."
-  #elif ENABLED(MIXING_EXTRUDER)
-    #error "DUAL_NOZZLE_DUPLICATION_MODE is incompatible with MIXING_EXTRUDER."
-  #elif ENABLED(SWITCHING_EXTRUDER)
-    #error "DUAL_NOZZLE_DUPLICATION_MODE is incompatible with SWITCHING_EXTRUDER."
-  #endif
-#endif
-
-/**
  * Test Extruder Stepper Pins
  */
 #if DISABLED(MK2_MULTIPLEXER) // MK2_MULTIPLEXER uses E0 stepper only
@@ -1272,87 +1024,19 @@ static_assert(X_MAX_LENGTH >= X_BED_SIZE && Y_MAX_LENGTH >= Y_BED_SIZE,
     #error "You must enable USE_ZMIN_PLUG or USE_ZMAX_PLUG."
   #endif
 
-  // Delta and Cartesian use 3 homing endstops
-  #if !IS_SCARA
-    #if X_HOME_DIR < 0 && DISABLED(USE_XMIN_PLUG)
-      #error "Enable USE_XMIN_PLUG when homing X to MIN."
-    #elif X_HOME_DIR > 0 && DISABLED(USE_XMAX_PLUG)
-      #error "Enable USE_XMAX_PLUG when homing X to MAX."
-    #elif Y_HOME_DIR < 0 && DISABLED(USE_YMIN_PLUG)
-      #error "Enable USE_YMIN_PLUG when homing Y to MIN."
-    #elif Y_HOME_DIR > 0 && DISABLED(USE_YMAX_PLUG)
-      #error "Enable USE_YMAX_PLUG when homing Y to MAX."
-    #endif
+  #if X_HOME_DIR < 0 && DISABLED(USE_XMIN_PLUG)
+    #error "Enable USE_XMIN_PLUG when homing X to MIN."
+  #elif X_HOME_DIR > 0 && DISABLED(USE_XMAX_PLUG)
+    #error "Enable USE_XMAX_PLUG when homing X to MAX."
+  #elif Y_HOME_DIR < 0 && DISABLED(USE_YMIN_PLUG)
+    #error "Enable USE_YMIN_PLUG when homing Y to MIN."
+  #elif Y_HOME_DIR > 0 && DISABLED(USE_YMAX_PLUG)
+    #error "Enable USE_YMAX_PLUG when homing Y to MAX."
   #endif
   #if Z_HOME_DIR < 0 && DISABLED(USE_ZMIN_PLUG)
     #error "Enable USE_ZMIN_PLUG when homing Z to MIN."
   #elif Z_HOME_DIR > 0 && DISABLED(USE_ZMAX_PLUG)
     #error "Enable USE_ZMAX_PLUG when homing Z to MAX."
-  #endif
-#endif
-
-// Dual endstops requirements
-#if ENABLED(X_DUAL_ENDSTOPS)
-  #if !X2_USE_ENDSTOP
-    #error "You must set X2_USE_ENDSTOP with X_DUAL_ENDSTOPS."
-  #elif X2_USE_ENDSTOP == _XMIN_ && DISABLED(USE_XMIN_PLUG)
-    #error "USE_XMIN_PLUG is required when X2_USE_ENDSTOP is _XMIN_."
-  #elif X2_USE_ENDSTOP == _XMAX_ && DISABLED(USE_XMAX_PLUG)
-    #error "USE_XMAX_PLUG is required when X2_USE_ENDSTOP is _XMAX_."
-  #elif X2_USE_ENDSTOP == _YMIN_ && DISABLED(USE_YMIN_PLUG)
-    #error "USE_YMIN_PLUG is required when X2_USE_ENDSTOP is _YMIN_."
-  #elif X2_USE_ENDSTOP == _YMAX_ && DISABLED(USE_YMAX_PLUG)
-    #error "USE_YMAX_PLUG is required when X2_USE_ENDSTOP is _YMAX_."
-  #elif X2_USE_ENDSTOP == _ZMIN_ && DISABLED(USE_ZMIN_PLUG)
-    #error "USE_ZMIN_PLUG is required when X2_USE_ENDSTOP is _ZMIN_."
-  #elif X2_USE_ENDSTOP == _ZMAX_ && DISABLED(USE_ZMAX_PLUG)
-    #error "USE_ZMAX_PLUG is required when X2_USE_ENDSTOP is _ZMAX_."
-  #elif !HAS_X2_MIN && !HAS_X2_MAX
-    #error "X2_USE_ENDSTOP has been assigned to a nonexistent endstop!"
-  #elif ENABLED(DELTA)
-    #error "X_DUAL_ENDSTOPS is not compatible with DELTA."
-  #endif
-#endif
-#if ENABLED(Y_DUAL_ENDSTOPS)
-  #if !Y2_USE_ENDSTOP
-    #error "You must set Y2_USE_ENDSTOP with Y_DUAL_ENDSTOPS."
-  #elif Y2_USE_ENDSTOP == _XMIN_ && DISABLED(USE_XMIN_PLUG)
-    #error "USE_XMIN_PLUG is required when Y2_USE_ENDSTOP is _XMIN_."
-  #elif Y2_USE_ENDSTOP == _XMAX_ && DISABLED(USE_XMAX_PLUG)
-    #error "USE_XMAX_PLUG is required when Y2_USE_ENDSTOP is _XMAX_."
-  #elif Y2_USE_ENDSTOP == _YMIN_ && DISABLED(USE_YMIN_PLUG)
-    #error "USE_YMIN_PLUG is required when Y2_USE_ENDSTOP is _YMIN_."
-  #elif Y2_USE_ENDSTOP == _YMAX_ && DISABLED(USE_YMAX_PLUG)
-    #error "USE_YMAX_PLUG is required when Y2_USE_ENDSTOP is _YMAX_."
-  #elif Y2_USE_ENDSTOP == _ZMIN_ && DISABLED(USE_ZMIN_PLUG)
-    #error "USE_ZMIN_PLUG is required when Y2_USE_ENDSTOP is _ZMIN_."
-  #elif Y2_USE_ENDSTOP == _ZMAX_ && DISABLED(USE_ZMAX_PLUG)
-    #error "USE_ZMAX_PLUG is required when Y2_USE_ENDSTOP is _ZMAX_."
-  #elif !HAS_Y2_MIN && !HAS_Y2_MAX
-    #error "Y2_USE_ENDSTOP has been assigned to a nonexistent endstop!"
-  #elif ENABLED(DELTA)
-    #error "Y_DUAL_ENDSTOPS is not compatible with DELTA."
-  #endif
-#endif
-#if ENABLED(Z_DUAL_ENDSTOPS)
-  #if !Z2_USE_ENDSTOP
-    #error "You must set Z2_USE_ENDSTOP with Z_DUAL_ENDSTOPS."
-  #elif Z2_USE_ENDSTOP == _XMIN_ && DISABLED(USE_XMIN_PLUG)
-    #error "USE_XMIN_PLUG is required when Z2_USE_ENDSTOP is _XMIN_."
-  #elif Z2_USE_ENDSTOP == _XMAX_ && DISABLED(USE_XMAX_PLUG)
-    #error "USE_XMAX_PLUG is required when Z2_USE_ENDSTOP is _XMAX_."
-  #elif Z2_USE_ENDSTOP == _YMIN_ && DISABLED(USE_YMIN_PLUG)
-    #error "USE_YMIN_PLUG is required when Z2_USE_ENDSTOP is _YMIN_."
-  #elif Z2_USE_ENDSTOP == _YMAX_ && DISABLED(USE_YMAX_PLUG)
-    #error "USE_YMAX_PLUG is required when Z2_USE_ENDSTOP is _YMAX_."
-  #elif Z2_USE_ENDSTOP == _ZMIN_ && DISABLED(USE_ZMIN_PLUG)
-    #error "USE_ZMIN_PLUG is required when Z2_USE_ENDSTOP is _ZMIN_."
-  #elif Z2_USE_ENDSTOP == _ZMAX_ && DISABLED(USE_ZMAX_PLUG)
-    #error "USE_ZMAX_PLUG is required when Z2_USE_ENDSTOP is _ZMAX_."
-  #elif !HAS_Z2_MIN && !HAS_Z2_MAX
-    #error "Z2_USE_ENDSTOP has been assigned to a nonexistent endstop!"
-  #elif ENABLED(DELTA)
-    #error "Z_DUAL_ENDSTOPS is not compatible with DELTA."
   #endif
 #endif
 
@@ -1490,16 +1174,10 @@ static_assert(X_MAX_LENGTH >= X_BED_SIZE && Y_MAX_LENGTH >= Y_BED_SIZE,
  */
 #if AXIS_DRIVER_TYPE(X, TMC2130) && !PIN_EXISTS(X_CS)
   #error "X_CS_PIN is required for TMC2130. Define X_CS_PIN in Configuration_adv.h."
-#elif AXIS_DRIVER_TYPE(X2, TMC2130) && !PIN_EXISTS(X2_CS)
-  #error "X2_CS_PIN is required for X2. Define X2_CS_PIN in Configuration_adv.h."
 #elif AXIS_DRIVER_TYPE(Y, TMC2130) && !PIN_EXISTS(Y_CS)
   #error "Y_CS_PIN is required for TMC2130. Define Y_CS_PIN in Configuration_adv.h."
-#elif AXIS_DRIVER_TYPE(Y2, TMC2130) && !PIN_EXISTS(Y2_CS)
-  #error "Y2_CS_PIN is required for TMC2130. Define Y2_CS_PIN in Configuration_adv.h."
 #elif AXIS_DRIVER_TYPE(Z, TMC2130) && !PIN_EXISTS(Z_CS)
   #error "Z_CS_PIN is required for TMC2130. Define Z_CS_PIN in Configuration_adv.h."
-#elif AXIS_DRIVER_TYPE(Z2, TMC2130) && !PIN_EXISTS(Z2_CS)
-  #error "Z2_CS_PIN is required for TMC2130. Define Z2_CS_PIN in Configuration_adv.h."
 #elif AXIS_DRIVER_TYPE(E0, TMC2130) && !PIN_EXISTS(E0_CS)
   #error "E0_CS_PIN is required for TMC2130. Define E0_CS_PIN in Configuration_adv.h."
 #elif AXIS_DRIVER_TYPE(E1, TMC2130) && !PIN_EXISTS(E1_CS)
@@ -1517,11 +1195,8 @@ static_assert(X_MAX_LENGTH >= X_BED_SIZE && Y_MAX_LENGTH >= Y_BED_SIZE,
  */
 #if HAS_DRIVER(TMC2208) && ENABLED(ENDSTOP_INTERRUPTS_FEATURE) && !( \
        defined(X_HARDWARE_SERIAL ) \
-    || defined(X2_HARDWARE_SERIAL) \
     || defined(Y_HARDWARE_SERIAL ) \
-    || defined(Y2_HARDWARE_SERIAL) \
     || defined(Z_HARDWARE_SERIAL ) \
-    || defined(Z2_HARDWARE_SERIAL) \
     || defined(E0_HARDWARE_SERIAL) \
     || defined(E1_HARDWARE_SERIAL) \
     || defined(E2_HARDWARE_SERIAL) \
@@ -1535,9 +1210,7 @@ static_assert(X_MAX_LENGTH >= X_BED_SIZE && Y_MAX_LENGTH >= Y_BED_SIZE,
   // is necessary in order to reset the stallGuard indication between the initial movement of all three
   // towers to +Z and the individual homing of each tower. This restriction can be removed once a means of
   // clearing the stallGuard activated status is found.
-  #if ENABLED(DELTA) && !ENABLED(STEALTHCHOP)
-    #error "SENSORLESS_HOMING on DELTA currently requires STEALTHCHOP."
-  #elif X_SENSORLESS && X_HOME_DIR == -1 && (!X_MIN_ENDSTOP_INVERTING || DISABLED(ENDSTOPPULLUP_XMIN))
+  #if X_SENSORLESS && X_HOME_DIR == -1 && (!X_MIN_ENDSTOP_INVERTING || DISABLED(ENDSTOPPULLUP_XMIN))
     #error "SENSORLESS_HOMING requires X_MIN_ENDSTOP_INVERTING and ENDSTOPPULLUP_XMIN when homing to X_MIN."
   #elif X_SENSORLESS && X_HOME_DIR ==  1 && (!X_MAX_ENDSTOP_INVERTING || DISABLED(ENDSTOPPULLUP_XMAX))
     #error "SENSORLESS_HOMING requires X_MAX_ENDSTOP_INVERTING and ENDSTOPPULLUP_XMAX when homing to X_MAX."
@@ -1566,7 +1239,7 @@ static_assert(X_MAX_LENGTH >= X_BED_SIZE && Y_MAX_LENGTH >= Y_BED_SIZE,
 #if ENABLED(HYBRID_THRESHOLD) && DISABLED(STEALTHCHOP)
   #error "Enable STEALTHCHOP to use HYBRID_THRESHOLD."
 #endif
-#if ENABLED(TMC_Z_CALIBRATION) && !AXIS_IS_TMC(Z) && !AXIS_IS_TMC(Z2)
+#if ENABLED(TMC_Z_CALIBRATION) && !AXIS_IS_TMC(Z)
   #error "TMC_Z_CALIBRATION requires at least one TMC driver on Z axis"
 #endif
 
@@ -1588,13 +1261,9 @@ static_assert(X_MAX_LENGTH >= X_BED_SIZE && Y_MAX_LENGTH >= Y_BED_SIZE,
 #endif
 
 /**
- * Require 5/4 or more elements in per-axis initializers
+ * Require 4 or more elements in per-axis initializers
  */
-#if ENABLED(HANGPRINTER)
-  #define MIN_ELEMENTS "5"
-#else
-  #define MIN_ELEMENTS "4"
-#endif
+#define MIN_ELEMENTS "4"
 
 constexpr float sanity_arr_1[] = DEFAULT_AXIS_STEPS_PER_UNIT,
                 sanity_arr_2[] = DEFAULT_MAX_FEEDRATE,
