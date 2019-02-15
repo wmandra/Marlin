@@ -35,6 +35,7 @@
 #include "../core/types.h"
 #include "../core/enum.h"
 #include "../Marlin.h"
+#include "../gcode/queue.h"
 
 #if ABL_PLANAR
   #include "vector_3.h"
