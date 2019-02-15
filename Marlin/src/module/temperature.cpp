@@ -42,8 +42,13 @@
   #include "stepper.h"
 #endif
 
-#include "../HAL/watchdog.h"
-#include "../feature/emergency_parser/emergency_parser.h"
+#if ENABLED(USE_WATCHDOG)
+  #include "../HAL/watchdog.h"
+#endif
+
+#if ENABLED(EMERGENCY_PARSER)
+  #include "../feature/emergency_parser/emergency_parser.h"
+#endif
 
 #if HOTEND_USES_THERMISTOR
   #if ENABLED(TEMP_SENSOR_1_AS_REDUNDANT)
@@ -117,6 +122,15 @@ int16_t Temperature::current_temperature_raw[HOTENDS] = { 0 },
         #if HAS_HEATED_BED
           || soft_pwm_amount_bed > 0
         #endif
+          #if HAS_X2_ENABLE
+            || X2_ENABLE_READ == X_ENABLE_ON
+          #endif
+          #if HAS_Y2_ENABLE
+            || Y2_ENABLE_READ == Y_ENABLE_ON
+          #endif
+          #if HAS_Z2_ENABLE
+            || Z2_ENABLE_READ == Z_ENABLE_ON
+          #endif
           || E0_ENABLE_READ == E_ENABLE_ON
           #if E_STEPPERS > 1
             || E1_ENABLE_READ == E_ENABLE_ON
@@ -216,10 +230,10 @@ int16_t Temperature::current_temperature_raw[HOTENDS] = { 0 },
   millis_t Temperature::watch_heater_next_ms[HOTENDS] = { 0 };
 #endif
 
-
-bool Temperature::allow_cold_extrude = false;
-int16_t Temperature::extrude_min_temp = EXTRUDE_MINTEMP;
-
+#if ENABLED(PREVENT_COLD_EXTRUSION)
+  bool Temperature::allow_cold_extrude = false;
+  int16_t Temperature::extrude_min_temp = EXTRUDE_MINTEMP;
+#endif
 
 #if ENABLED(TEMP_SENSOR_1_AS_REDUNDANT)
   uint16_t Temperature::redundant_temperature_raw = 0;
@@ -827,7 +841,9 @@ void Temperature::manage_heater() {
     static bool last_pause_state;
   #endif
 
-  if (emergency_parser.killed_by_M112) kill(PSTR(MSG_KILLED));
+  #if ENABLED(EMERGENCY_PARSER)
+    if (emergency_parser.killed_by_M112) kill(PSTR(MSG_KILLED));
+  #endif
 
   if (!temp_meas_ready) return;
 
@@ -849,8 +865,10 @@ void Temperature::manage_heater() {
         heater_idle_timeout_exceeded[e] = true;
     #endif
 
-    // Check for thermal runaway
-    thermal_runaway_protection(&thermal_runaway_state_machine[e], &thermal_runaway_timer[e], current_temperature[e], target_temperature[e], e, THERMAL_PROTECTION_PERIOD, THERMAL_PROTECTION_HYSTERESIS);
+    #if ENABLED(THERMAL_PROTECTION_HOTENDS)
+      // Check for thermal runaway
+      thermal_runaway_protection(&thermal_runaway_state_machine[e], &thermal_runaway_timer[e], current_temperature[e], target_temperature[e], e, THERMAL_PROTECTION_PERIOD, THERMAL_PROTECTION_HYSTERESIS);
+    #endif
 
     soft_pwm_amount[e] = (current_temperature[e] > minttemp[e] || is_preheating(e)) && current_temperature[e] < maxttemp[e] ? (int)get_pid_output(e) >> 1 : 0;
 
@@ -1475,74 +1493,80 @@ void Temperature::init() {
   }
 #endif
 
+#if ENABLED(THERMAL_PROTECTION_HOTENDS) || HAS_THERMALLY_PROTECTED_BED
 
-Temperature::TRState Temperature::thermal_runaway_state_machine[HOTENDS] = { TRInactive };
-millis_t Temperature::thermal_runaway_timer[HOTENDS] = { 0 };
-
-Temperature::TRState Temperature::thermal_runaway_bed_state_machine = TRInactive;
-millis_t Temperature::thermal_runaway_bed_timer;
-
-
-void Temperature::thermal_runaway_protection(Temperature::TRState * const state, millis_t * const timer, const float &current, const float &target, const int8_t heater_id, const uint16_t period_seconds, const uint16_t hysteresis_degc) {
-
-  static float tr_target_temperature[HOTENDS + 1] = { 0.0 };
-
-  /**
-      SERIAL_ECHO_START();
-      SERIAL_ECHOPGM("Thermal Thermal Runaway Running. Heater ID: ");
-      if (heater_id < 0) SERIAL_ECHOPGM("bed"); else SERIAL_ECHO(heater_id);
-      SERIAL_ECHOPAIR(" ;  State:", *state);
-      SERIAL_ECHOPAIR(" ;  Timer:", *timer);
-      SERIAL_ECHOPAIR(" ;  Temperature:", current);
-      SERIAL_ECHOPAIR(" ;  Target Temp:", target);
-      if (heater_id >= 0)
-        SERIAL_ECHOPAIR(" ;  Idle Timeout:", heater_idle_timeout_exceeded[heater_id]);
-      else
-        SERIAL_ECHOPAIR(" ;  Idle Timeout:", bed_idle_timeout_exceeded);
-      SERIAL_EOL();
-  */
-
-  const int heater_index = heater_id >= 0 ? heater_id : HOTENDS;
-
-  #if HEATER_IDLE_HANDLER
-    // If the heater idle timeout expires, restart
-    if ((heater_id >= 0 && heater_idle_timeout_exceeded[heater_id])
-      #if HAS_HEATED_BED
-        || (heater_id < 0 && bed_idle_timeout_exceeded)
-      #endif
-    ) {
-      *state = TRInactive;
-      tr_target_temperature[heater_index] = 0;
-    }
-    else
+  #if ENABLED(THERMAL_PROTECTION_HOTENDS)
+    Temperature::TRState Temperature::thermal_runaway_state_machine[HOTENDS] = { TRInactive };
+    millis_t Temperature::thermal_runaway_timer[HOTENDS] = { 0 };
   #endif
-  {
-    // If the target temperature changes, restart
-    if (tr_target_temperature[heater_index] != target) {
-      tr_target_temperature[heater_index] = target;
-      *state = target > 0 ? TRFirstHeating : TRInactive;
+
+  #if HAS_THERMALLY_PROTECTED_BED
+    Temperature::TRState Temperature::thermal_runaway_bed_state_machine = TRInactive;
+    millis_t Temperature::thermal_runaway_bed_timer;
+  #endif
+
+  void Temperature::thermal_runaway_protection(Temperature::TRState * const state, millis_t * const timer, const float &current, const float &target, const int8_t heater_id, const uint16_t period_seconds, const uint16_t hysteresis_degc) {
+
+    static float tr_target_temperature[HOTENDS + 1] = { 0.0 };
+
+    /**
+        SERIAL_ECHO_START();
+        SERIAL_ECHOPGM("Thermal Thermal Runaway Running. Heater ID: ");
+        if (heater_id < 0) SERIAL_ECHOPGM("bed"); else SERIAL_ECHO(heater_id);
+        SERIAL_ECHOPAIR(" ;  State:", *state);
+        SERIAL_ECHOPAIR(" ;  Timer:", *timer);
+        SERIAL_ECHOPAIR(" ;  Temperature:", current);
+        SERIAL_ECHOPAIR(" ;  Target Temp:", target);
+        if (heater_id >= 0)
+          SERIAL_ECHOPAIR(" ;  Idle Timeout:", heater_idle_timeout_exceeded[heater_id]);
+        else
+          SERIAL_ECHOPAIR(" ;  Idle Timeout:", bed_idle_timeout_exceeded);
+        SERIAL_EOL();
+    */
+
+    const int heater_index = heater_id >= 0 ? heater_id : HOTENDS;
+
+    #if HEATER_IDLE_HANDLER
+      // If the heater idle timeout expires, restart
+      if ((heater_id >= 0 && heater_idle_timeout_exceeded[heater_id])
+        #if HAS_HEATED_BED
+          || (heater_id < 0 && bed_idle_timeout_exceeded)
+        #endif
+      ) {
+        *state = TRInactive;
+        tr_target_temperature[heater_index] = 0;
+      }
+      else
+    #endif
+    {
+      // If the target temperature changes, restart
+      if (tr_target_temperature[heater_index] != target) {
+        tr_target_temperature[heater_index] = target;
+        *state = target > 0 ? TRFirstHeating : TRInactive;
+      }
+    }
+
+    switch (*state) {
+      // Inactive state waits for a target temperature to be set
+      case TRInactive: break;
+      // When first heating, wait for the temperature to be reached then go to Stable state
+      case TRFirstHeating:
+        if (current < tr_target_temperature[heater_index]) break;
+        *state = TRStable;
+      // While the temperature is stable watch for a bad temperature
+      case TRStable:
+        if (current >= tr_target_temperature[heater_index] - hysteresis_degc) {
+          *timer = millis() + period_seconds * 1000UL;
+          break;
+        }
+        else if (PENDING(millis(), *timer)) break;
+        *state = TRRunaway;
+      case TRRunaway:
+        _temp_error(heater_id, PSTR(MSG_T_THERMAL_RUNAWAY), TEMP_ERR_PSTR(MSG_THERMAL_RUNAWAY, heater_id));
     }
   }
 
-  switch (*state) {
-    // Inactive state waits for a target temperature to be set
-    case TRInactive: break;
-    // When first heating, wait for the temperature to be reached then go to Stable state
-    case TRFirstHeating:
-      if (current < tr_target_temperature[heater_index]) break;
-      *state = TRStable;
-    // While the temperature is stable watch for a bad temperature
-    case TRStable:
-      if (current >= tr_target_temperature[heater_index] - hysteresis_degc) {
-        *timer = millis() + period_seconds * 1000UL;
-        break;
-      }
-      else if (PENDING(millis(), *timer)) break;
-      *state = TRRunaway;
-    case TRRunaway:
-      _temp_error(heater_id, PSTR(MSG_T_THERMAL_RUNAWAY), TEMP_ERR_PSTR(MSG_THERMAL_RUNAWAY, heater_id));
-  }
-}
+#endif // THERMAL_PROTECTION_HOTENDS || THERMAL_PROTECTION_BED
 
 void Temperature::disable_all_heaters() {
 

@@ -75,7 +75,11 @@
 #endif
 
 // S curve interpolation adds 160 cycles
-#define ISR_S_CURVE_CYCLES 160UL
+#if ENABLED(S_CURVE_ACCELERATION)
+  #define ISR_S_CURVE_CYCLES 160UL
+#else
+  #define ISR_S_CURVE_CYCLES 0UL
+#endif
 
 // Stepper Loop base cycles
 #define ISR_LOOP_BASE_CYCLES 32UL
@@ -222,6 +226,10 @@ class Stepper {
 
   public:
 
+    #if ENABLED(X_DUAL_ENDSTOPS) || ENABLED(Y_DUAL_ENDSTOPS) || ENABLED(Z_DUAL_ENDSTOPS)
+      static bool homing_dual_axis;
+    #endif
+
     #if HAS_MOTOR_CURRENT_PWM
       #ifndef PWM_MOTOR_CURRENT
         #define PWM_MOTOR_CURRENT DEFAULT_PWM_MOTOR_CURRENT
@@ -240,6 +248,16 @@ class Stepper {
 
     #if DISABLED(MIXING_EXTRUDER)
       static uint8_t last_moved_extruder;   // Last-moved extruder, as set when the last movement was fetched from planner
+    #endif
+
+    #if ENABLED(X_DUAL_ENDSTOPS)
+      static bool locked_X_motor, locked_X2_motor;
+    #endif
+    #if ENABLED(Y_DUAL_ENDSTOPS)
+      static bool locked_Y_motor, locked_Y2_motor;
+    #endif
+    #if ENABLED(Z_DUAL_ENDSTOPS)
+      static bool locked_Z_motor, locked_Z2_motor;
     #endif
 
     static uint32_t acceleration_time, deceleration_time; // time measured in Stepper Timer ticks
@@ -271,13 +289,15 @@ class Stepper {
       static int8_t active_extruder;      // Active extruder
     #endif
 
-    static int32_t bezier_A,     // A coefficient in Bézier speed curve
-                   bezier_B,     // B coefficient in Bézier speed curve
-                   bezier_C;     // C coefficient in Bézier speed curve
-    static uint32_t bezier_F,    // F coefficient in Bézier speed curve
-                    bezier_AV;   // AV coefficient in Bézier speed curve
-    static bool A_negative,      // If A coefficient was negative
-                bezier_2nd_half; // If Bézier curve has been initialized or not
+    #if ENABLED(S_CURVE_ACCELERATION)
+      static int32_t bezier_A,     // A coefficient in Bézier speed curve
+                     bezier_B,     // B coefficient in Bézier speed curve
+                     bezier_C;     // C coefficient in Bézier speed curve
+      static uint32_t bezier_F,    // F coefficient in Bézier speed curve
+                      bezier_AV;   // AV coefficient in Bézier speed curve
+      static bool A_negative,      // If A coefficient was negative
+                  bezier_2nd_half; // If Bézier curve has been initialized or not
+    #endif
 
     static uint32_t nextMainISR;   // time remaining for the next Step ISR
     #if ENABLED(LIN_ADVANCE)
@@ -288,6 +308,9 @@ class Stepper {
     #endif // LIN_ADVANCE
 
     static int32_t ticks_nominal;
+    #if DISABLED(S_CURVE_ACCELERATION)
+      static uint32_t acc_step_rate; // needed for deceleration start point
+    #endif
 
     static volatile int32_t endstops_trigsteps[XYZ];
 
@@ -377,6 +400,22 @@ class Stepper {
       static void microstep_readings();
     #endif
 
+    #if ENABLED(X_DUAL_ENDSTOPS) || ENABLED(Y_DUAL_ENDSTOPS) || ENABLED(Z_DUAL_ENDSTOPS)
+      FORCE_INLINE static void set_homing_dual_axis(const bool state) { homing_dual_axis = state; }
+    #endif
+    #if ENABLED(X_DUAL_ENDSTOPS)
+      FORCE_INLINE static void set_x_lock(const bool state) { locked_X_motor = state; }
+      FORCE_INLINE static void set_x2_lock(const bool state) { locked_X2_motor = state; }
+    #endif
+    #if ENABLED(Y_DUAL_ENDSTOPS)
+      FORCE_INLINE static void set_y_lock(const bool state) { locked_Y_motor = state; }
+      FORCE_INLINE static void set_y2_lock(const bool state) { locked_Y2_motor = state; }
+    #endif
+    #if ENABLED(Z_DUAL_ENDSTOPS)
+      FORCE_INLINE static void set_z_lock(const bool state) { locked_Z_motor = state; }
+      FORCE_INLINE static void set_z2_lock(const bool state) { locked_Z2_motor = state; }
+    #endif
+
     #if ENABLED(BABYSTEPPING)
       static void babystep(const AxisEnum axis, const bool direction); // perform a short step with a single stepper motor, outside of any convention
     #endif
@@ -386,11 +425,21 @@ class Stepper {
     #endif
 
     // Set the current position in steps
-    inline static void set_position(const int32_t &a, const int32_t &b, const int32_t &c, const int32_t &e) {
+    inline static void set_position(const int32_t &a, const int32_t &b, const int32_t &c
+      #if ENABLED(HANGPRINTER)
+        , const int32_t &d
+      #endif
+      , const int32_t &e
+    ) {
       planner.synchronize();
       const bool was_enabled = STEPPER_ISR_ENABLED();
       if (was_enabled) DISABLE_STEPPER_DRIVER_INTERRUPT();
-      _set_position(a, b, c, e);
+      _set_position(a, b, c
+        #if ENABLED(HANGPRINTER)
+          , d
+        #endif
+        , e
+      );
       if (was_enabled) ENABLE_STEPPER_DRIVER_INTERRUPT();
     }
 
@@ -408,7 +457,12 @@ class Stepper {
   private:
 
     // Set the current position in steps
-    static void _set_position(const int32_t &a, const int32_t &b, const int32_t &c, const int32_t &e);
+    static void _set_position(const int32_t &a, const int32_t &b, const int32_t &c
+      #if ENABLED(HANGPRINTER)
+        , const int32_t &d
+      #endif
+      , const int32_t &e
+    );
 
     // Set direction bits for all steppers
     static void set_directions();
@@ -471,8 +525,10 @@ class Stepper {
       return timer;
     }
 
-    static void _calc_bezier_curve_coeffs(const int32_t v0, const int32_t v1, const uint32_t av);
-    static int32_t _eval_bezier_curve(const uint32_t curr_step);
+    #if ENABLED(S_CURVE_ACCELERATION)
+      static void _calc_bezier_curve_coeffs(const int32_t v0, const int32_t v1, const uint32_t av);
+      static int32_t _eval_bezier_curve(const uint32_t curr_step);
+    #endif
 
     #if HAS_DIGIPOTSS || HAS_MOTOR_CURRENT_PWM
       static void digipot_init();

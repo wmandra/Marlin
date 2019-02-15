@@ -38,7 +38,13 @@ enum EndstopEnum : char {
   Z_MIN_PROBE,
   X_MAX,
   Y_MAX,
-  Z_MAX
+  Z_MAX,
+  X2_MIN,
+  X2_MAX,
+  Y2_MIN,
+  Y2_MAX,
+  Z2_MIN,
+  Z2_MAX
 };
 
 class Endstops {
@@ -47,7 +53,20 @@ class Endstops {
 
     static bool enabled, enabled_globally;
 
-    typedef uint8_t esbits_t;
+    #if ENABLED(X_DUAL_ENDSTOPS) || ENABLED(Y_DUAL_ENDSTOPS) || ENABLED(Z_DUAL_ENDSTOPS)
+      typedef uint16_t esbits_t;
+      #if ENABLED(X_DUAL_ENDSTOPS)
+        static float x_endstop_adj;
+      #endif
+      #if ENABLED(Y_DUAL_ENDSTOPS)
+        static float y_endstop_adj;
+      #endif
+      #if ENABLED(Z_DUAL_ENDSTOPS)
+        static float z_endstop_adj;
+      #endif
+    #else
+      typedef uint8_t esbits_t;
+    #endif
 
   private:
     static esbits_t live_state;

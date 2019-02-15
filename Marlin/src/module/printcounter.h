@@ -199,6 +199,10 @@ class PrintCounter: public Stopwatch {
 };
 
 // Global Print Job Timer instance
-extern PrintCounter print_job_timer;
+#if ENABLED(PRINTCOUNTER)
+  extern PrintCounter print_job_timer;
+#else
+  extern Stopwatch print_job_timer;
+#endif
 
 #endif // PRINTCOUNTER_H
