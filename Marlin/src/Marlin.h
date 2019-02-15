@@ -58,7 +58,10 @@ extern const char axis_codes[XYZE];
   extern bool extruder_duplication_enabled;
 #endif
 
-#if HAS_X_ENABLE
+#if HAS_X2_ENABLE
+  #define  enable_X() do{ X_ENABLE_WRITE( X_ENABLE_ON); X2_ENABLE_WRITE( X_ENABLE_ON); }while(0)
+  #define disable_X() do{ X_ENABLE_WRITE(!X_ENABLE_ON); X2_ENABLE_WRITE(!X_ENABLE_ON); CBI(axis_known_position, X_AXIS); }while(0)
+#elif HAS_X_ENABLE
   #define  enable_X() X_ENABLE_WRITE( X_ENABLE_ON)
   #define disable_X() do{ X_ENABLE_WRITE(!X_ENABLE_ON); CBI(axis_known_position, X_AXIS); }while(0)
 #else
@@ -66,7 +69,10 @@ extern const char axis_codes[XYZE];
   #define disable_X() NOOP
 #endif
 
-#if HAS_Y_ENABLE
+#if HAS_Y2_ENABLE
+  #define  enable_Y() do{ Y_ENABLE_WRITE( Y_ENABLE_ON); Y2_ENABLE_WRITE(Y_ENABLE_ON); }while(0)
+  #define disable_Y() do{ Y_ENABLE_WRITE(!Y_ENABLE_ON); Y2_ENABLE_WRITE(!Y_ENABLE_ON); CBI(axis_known_position, Y_AXIS); }while(0)
+#elif HAS_Y_ENABLE
   #define  enable_Y() Y_ENABLE_WRITE( Y_ENABLE_ON)
   #define disable_Y() do{ Y_ENABLE_WRITE(!Y_ENABLE_ON); CBI(axis_known_position, Y_AXIS); }while(0)
 #else
@@ -74,7 +80,10 @@ extern const char axis_codes[XYZE];
   #define disable_Y() NOOP
 #endif
 
-#if HAS_Z_ENABLE
+#if HAS_Z2_ENABLE
+  #define  enable_Z() do{ Z_ENABLE_WRITE( Z_ENABLE_ON); Z2_ENABLE_WRITE(Z_ENABLE_ON); }while(0)
+  #define disable_Z() do{ Z_ENABLE_WRITE(!Z_ENABLE_ON); Z2_ENABLE_WRITE(!Z_ENABLE_ON); CBI(axis_known_position, Z_AXIS); }while(0)
+#elif HAS_Z_ENABLE
   #define  enable_Z() Z_ENABLE_WRITE( Z_ENABLE_ON)
   #define disable_Z() do{ Z_ENABLE_WRITE(!Z_ENABLE_ON); CBI(axis_known_position, Z_AXIS); }while(0)
 #else
@@ -153,6 +162,42 @@ extern const char axis_codes[XYZE];
 
 #endif // !MIXING_EXTRUDER
 
+#if ENABLED(HANGPRINTER)
+
+  #define enable_A() enable_X()
+  #define enable_B() enable_Y()
+  #define enable_C() enable_Z()
+  #define __D_ENABLE(p) E##p##_ENABLE_WRITE(E_ENABLE_ON)
+  #define _D_ENABLE(p) __D_ENABLE(p)
+  #define enable_D() _D_ENABLE(EXTRUDERS)
+
+  // Don't allow any axes to be disabled
+  #undef disable_X
+  #undef disable_Y
+  #undef disable_Z
+  #define disable_X() NOOP
+  #define disable_Y() NOOP
+  #define disable_Z() NOOP
+
+  #if EXTRUDERS >= 1
+    #undef disable_E1
+    #define disable_E1() NOOP
+    #if EXTRUDERS >= 2
+      #undef disable_E2
+      #define disable_E2() NOOP
+      #if EXTRUDERS >= 3
+        #undef disable_E3
+        #define disable_E3() NOOP
+        #if EXTRUDERS >= 4
+          #undef disable_E4
+          #define disable_E4() NOOP
+        #endif // EXTRUDERS >= 4
+      #endif // EXTRUDERS >= 3
+    #endif // EXTRUDERS >= 2
+  #endif // EXTRUDERS >= 1
+
+#endif // HANGPRINTER
+
 #if ENABLED(G38_PROBE_TARGET)
   extern bool G38_move,        // flag to tell the interrupt handler that a G38 command is being run
               G38_endstop_hit; // flag from the interrupt handler to indicate if the endstop went active
@@ -166,9 +211,15 @@ void disable_all_steppers();
 void sync_plan_position();
 void sync_plan_position_e();
 
-#define SYNC_PLAN_POSITION_KINEMATIC() sync_plan_position()
+#if IS_KINEMATIC
+  void sync_plan_position_kinematic();
+  #define SYNC_PLAN_POSITION_KINEMATIC() sync_plan_position_kinematic()
+#else
+  #define SYNC_PLAN_POSITION_KINEMATIC() sync_plan_position()
+#endif
 
-
+void flush_and_request_resend();
+void ok_to_send();
 
 void kill(const char*);
 
@@ -181,9 +232,26 @@ extern bool Running;
 inline bool IsRunning() { return  Running; }
 inline bool IsStopped() { return !Running; }
 
+bool enqueue_and_echo_command(const char* cmd);           // Add a single command to the end of the buffer. Return false on failure.
+void enqueue_and_echo_commands_P(const char * const cmd); // Set one or more commands to be prioritized over the next Serial/SD command.
+void clear_command_queue();
 
+#if ENABLED(M100_FREE_MEMORY_WATCHER) || ENABLED(POWER_LOSS_RECOVERY)
+  extern char command_queue[BUFSIZE][MAX_CMD_SIZE];
+#endif
 
+#define HAS_LCD_QUEUE_NOW (ENABLED(MALYAN_LCD) || (ENABLED(ULTIPANEL) && (ENABLED(AUTO_BED_LEVELING_UBL) || ENABLED(PID_AUTOTUNE_MENU) || ENABLED(ADVANCED_PAUSE_FEATURE))))
+#define HAS_QUEUE_NOW (ENABLED(SDSUPPORT) || HAS_LCD_QUEUE_NOW)
+#if HAS_QUEUE_NOW
+  // Return only when commands are actually enqueued
+  void enqueue_and_echo_command_now(const char* cmd);
+  #if HAS_LCD_QUEUE_NOW
+    void enqueue_and_echo_commands_now_P(const char * const cmd);
+  #endif
+#endif
 
+extern millis_t previous_move_ms;
+inline void reset_stepper_timeout() { previous_move_ms = millis(); }
 
 /**
  * Feedrate scaling and conversion
@@ -193,7 +261,7 @@ extern int16_t feedrate_percentage;
 
 #define MMS_SCALED(MM_S) ((MM_S)*feedrate_percentage*0.01f)
 
-
+extern bool axis_relative_modes[XYZE];
 
 extern uint8_t axis_homed, axis_known_position;
 
@@ -213,8 +281,30 @@ extern volatile bool wait_for_heatup;
 
 extern float current_position[XYZE], destination[XYZE];
 
-#define NATIVE_TO_LOGICAL(POS, AXIS) (POS)
-#define LOGICAL_TO_NATIVE(POS, AXIS) (POS)
+/**
+ * Workspace offsets
+ */
+#if HAS_WORKSPACE_OFFSET
+  #if HAS_HOME_OFFSET
+    extern float home_offset[XYZ];
+  #endif
+  #if HAS_POSITION_SHIFT
+    extern float position_shift[XYZ];
+  #endif
+  #if HAS_HOME_OFFSET && HAS_POSITION_SHIFT
+    extern float workspace_offset[XYZ];
+    #define WORKSPACE_OFFSET(AXIS) workspace_offset[AXIS]
+  #elif HAS_HOME_OFFSET
+    #define WORKSPACE_OFFSET(AXIS) home_offset[AXIS]
+  #elif HAS_POSITION_SHIFT
+    #define WORKSPACE_OFFSET(AXIS) position_shift[AXIS]
+  #endif
+  #define NATIVE_TO_LOGICAL(POS, AXIS) ((POS) + WORKSPACE_OFFSET(AXIS))
+  #define LOGICAL_TO_NATIVE(POS, AXIS) ((POS) - WORKSPACE_OFFSET(AXIS))
+#else
+  #define NATIVE_TO_LOGICAL(POS, AXIS) (POS)
+  #define LOGICAL_TO_NATIVE(POS, AXIS) (POS)
+#endif
 #define LOGICAL_X_POSITION(POS) NATIVE_TO_LOGICAL(POS, X_AXIS)
 #define LOGICAL_Y_POSITION(POS) NATIVE_TO_LOGICAL(POS, Y_AXIS)
 #define LOGICAL_Z_POSITION(POS) NATIVE_TO_LOGICAL(POS, Z_AXIS)
@@ -230,16 +320,116 @@ extern float current_position[XYZE], destination[XYZE];
 // Software Endstops
 extern float soft_endstop_min[XYZ], soft_endstop_max[XYZ];
 
-extern bool soft_endstops_enabled;
-void clamp_to_software_endstops(float target[XYZ]);
+#if HAS_SOFTWARE_ENDSTOPS
+  extern bool soft_endstops_enabled;
+  void clamp_to_software_endstops(float target[XYZ]);
+#else
+  #define soft_endstops_enabled false
+  #define clamp_to_software_endstops(x) NOOP
+#endif
+
+#if HAS_WORKSPACE_OFFSET || ENABLED(DUAL_X_CARRIAGE)
+  void update_software_endstops(const AxisEnum axis);
+#endif
 
 #define MAX_COORDINATE_SYSTEMS 9
+#if ENABLED(CNC_COORDINATE_SYSTEMS)
+  extern float coordinate_system[MAX_COORDINATE_SYSTEMS][XYZ];
+  bool select_coordinate_system(const int8_t _new);
+#endif
 
 void tool_change(const uint8_t tmp_extruder, const float fr_mm_s=0.0, bool no_move=false);
 
 void home_all_axes();
 
 void report_current_position();
+
+#if IS_KINEMATIC
+  #if ENABLED(HANGPRINTER)
+    extern float line_lengths[ABCD];
+  #else
+    extern float delta[ABC];
+  #endif
+  void inverse_kinematics(const float raw[XYZ]);
+#endif
+
+#if ENABLED(DELTA)
+  extern float delta_height,
+               delta_endstop_adj[ABC],
+               delta_radius,
+               delta_tower_angle_trim[ABC],
+               delta_tower[ABC][2],
+               delta_diagonal_rod,
+               delta_calibration_radius,
+               delta_diagonal_rod_2_tower[ABC],
+               delta_segments_per_second,
+               delta_clip_start_height;
+
+  void recalc_delta_settings();
+  float delta_safe_distance_from_top();
+
+  // Macro to obtain the Z position of an individual tower
+  #define DELTA_Z(V,T) V[Z_AXIS] + SQRT(    \
+    delta_diagonal_rod_2_tower[T] - HYPOT2( \
+        delta_tower[T][X_AXIS] - V[X_AXIS], \
+        delta_tower[T][Y_AXIS] - V[Y_AXIS]  \
+      )                                     \
+    )
+
+  #define DELTA_IK(V) do {              \
+    delta[A_AXIS] = DELTA_Z(V, A_AXIS); \
+    delta[B_AXIS] = DELTA_Z(V, B_AXIS); \
+    delta[C_AXIS] = DELTA_Z(V, C_AXIS); \
+  }while(0)
+
+#elif ENABLED(HANGPRINTER)
+
+  // Don't collect anchor positions in array because there are no A_x, D_x or D_y
+  extern float anchor_A_y,
+               anchor_A_z,
+               anchor_B_x,
+               anchor_B_y,
+               anchor_B_z,
+               anchor_C_x,
+               anchor_C_y,
+               anchor_C_z,
+               anchor_D_z,
+               delta_segments_per_second,
+               line_lengths_origin[ABCD];
+
+  void recalc_hangprinter_settings();
+
+  #define HANGPRINTER_IK(V) do {                             \
+    line_lengths[A_AXIS] = SQRT(sq(anchor_A_z - V[Z_AXIS])   \
+                              + sq(anchor_A_y - V[Y_AXIS])   \
+                              + sq(             V[X_AXIS])); \
+    line_lengths[B_AXIS] = SQRT(sq(anchor_B_z - V[Z_AXIS])   \
+                              + sq(anchor_B_y - V[Y_AXIS])   \
+                              + sq(anchor_B_x - V[X_AXIS])); \
+    line_lengths[C_AXIS] = SQRT(sq(anchor_C_z - V[Z_AXIS])   \
+                              + sq(anchor_C_y - V[Y_AXIS])   \
+                              + sq(anchor_C_x - V[X_AXIS])); \
+    line_lengths[D_AXIS] = SQRT(sq(             V[X_AXIS])   \
+                              + sq(             V[Y_AXIS])   \
+                              + sq(anchor_D_z - V[Z_AXIS])); \
+  }while(0)
+
+  // Inverse kinematics at origin
+  #define HANGPRINTER_IK_ORIGIN(LL) do { \
+    LL[A_AXIS] = SQRT(sq(anchor_A_z)     \
+                    + sq(anchor_A_y));   \
+    LL[B_AXIS] = SQRT(sq(anchor_B_z)     \
+                    + sq(anchor_B_y)     \
+                    + sq(anchor_B_x));   \
+    LL[C_AXIS] = SQRT(sq(anchor_C_z)     \
+                    + sq(anchor_C_y)     \
+                    + sq(anchor_C_x));   \
+    LL[D_AXIS] = anchor_D_z;             \
+  }while(0)
+
+#elif IS_SCARA
+  void forward_kinematics_SCARA(const float &a, const float &b);
+#endif
 
 #if ENABLED(G26_MESH_VALIDATION)
   extern bool g26_debug_flag;
@@ -250,6 +440,9 @@ void report_current_position();
 #if ENABLED(AUTO_BED_LEVELING_BILINEAR)
   #define _GET_MESH_X(I) (bilinear_start[X_AXIS] + (I) * bilinear_grid_spacing[X_AXIS])
   #define _GET_MESH_Y(J) (bilinear_start[Y_AXIS] + (J) * bilinear_grid_spacing[Y_AXIS])
+#elif ENABLED(AUTO_BED_LEVELING_UBL)
+  #define _GET_MESH_X(I) ubl.mesh_index_to_xpos(I)
+  #define _GET_MESH_Y(J) ubl.mesh_index_to_ypos(J)
 #elif ENABLED(MESH_BED_LEVELING)
   #define _GET_MESH_X(I) mbl.index_to_xpos[I]
   #define _GET_MESH_Y(J) mbl.index_to_ypos[J]
@@ -304,6 +497,10 @@ void report_current_position();
   #define KEEPALIVE_STATE(n) NOOP
 #endif
 
+#if ENABLED(BARICUDA)
+  extern uint8_t baricuda_valve_pressure, baricuda_e_to_p_pressure;
+#endif
+
 #if ENABLED(FILAMENT_WIDTH_SENSOR)
   extern bool filament_sensor;         // Flag that filament sensor readings should control extrusion
   extern float filament_width_nominal, // Theoretical filament diameter i.e., 3.00 or 1.75
@@ -350,7 +547,9 @@ void do_blocking_move_to_xy(const float &rx, const float &ry, const float &fr_mm
 #endif
 
 #define HAS_AXIS_UNHOMED_ERR (                                                     \
-         HAS_PROBING_PROCEDURE                                                     \
+         ENABLED(Z_PROBE_ALLEN_KEY)                                                \
+      || ENABLED(Z_PROBE_SLED)                                                     \
+      || HAS_PROBING_PROCEDURE                                                     \
       || HOTENDS > 1                                                               \
       || ENABLED(NOZZLE_CLEAN_FEATURE)                                             \
       || ENABLED(NOZZLE_PARK_FEATURE)                                              \
@@ -366,27 +565,66 @@ void do_blocking_move_to_xy(const float &rx, const float &ry, const float &fr_mm
  * position_is_reachable family of functions
  */
 
-// Return true if the given position is within the machine bounds.
-inline bool position_is_reachable(const float &rx, const float &ry) {
-  // Add 0.001 margin to deal with float imprecision
-  return WITHIN(rx, X_MIN_POS - 0.001f, X_MAX_POS + 0.001f)
-      && WITHIN(ry, Y_MIN_POS - 0.001f, Y_MAX_POS + 0.001f);
-}
+#if IS_KINEMATIC // (DELTA or SCARA)
 
-#if HAS_BED_PROBE
-  /**
-   * Return whether the given position is within the bed, and whether the nozzle
-   * can reach the position required to put the probe at the given position.
-   *
-   * Example: For a probe offset of -10,+10, then for the probe to reach 0,0 the
-   *          nozzle must be be able to reach +10,-10.
-   */
-  inline bool position_is_reachable_by_probe(const float &rx, const float &ry) {
-    return position_is_reachable(rx - (X_PROBE_OFFSET_FROM_EXTRUDER), ry - (Y_PROBE_OFFSET_FROM_EXTRUDER))
-        && WITHIN(rx, MIN_PROBE_X - 0.001f, MAX_PROBE_X + 0.001f)
-        && WITHIN(ry, MIN_PROBE_Y - 0.001f, MAX_PROBE_Y + 0.001f);
+  #if IS_SCARA
+    extern const float L1, L2;
+  #endif
+
+  // Return true if the given point is within the printable area
+  inline bool position_is_reachable(const float &rx, const float &ry, const float inset=0) {
+    #if ENABLED(DELTA)
+      return HYPOT2(rx, ry) <= sq(DELTA_PRINTABLE_RADIUS - inset);
+    #elif ENABLED(HANGPRINTER)
+      // TODO: This is over simplified. Hangprinter's build volume is _not_ cylindrical.
+      return HYPOT2(rx, ry) <= sq(HANGPRINTER_PRINTABLE_RADIUS - inset);
+    #elif IS_SCARA
+      const float R2 = HYPOT2(rx - SCARA_OFFSET_X, ry - SCARA_OFFSET_Y);
+      return (
+        R2 <= sq(L1 + L2) - inset
+        #if MIDDLE_DEAD_ZONE_R > 0
+          && R2 >= sq(float(MIDDLE_DEAD_ZONE_R))
+        #endif
+      );
+    #endif
   }
-#else
+
+  #if HAS_BED_PROBE
+    // Return true if the both nozzle and the probe can reach the given point.
+    // Note: This won't work on SCARA since the probe offset rotates with the arm.
+    inline bool position_is_reachable_by_probe(const float &rx, const float &ry) {
+      return position_is_reachable(rx - (X_PROBE_OFFSET_FROM_EXTRUDER), ry - (Y_PROBE_OFFSET_FROM_EXTRUDER))
+             && position_is_reachable(rx, ry, ABS(MIN_PROBE_EDGE));
+    }
+  #endif
+
+#else // CARTESIAN
+
+   // Return true if the given position is within the machine bounds.
+  inline bool position_is_reachable(const float &rx, const float &ry) {
+    // Add 0.001 margin to deal with float imprecision
+    return WITHIN(rx, X_MIN_POS - 0.001f, X_MAX_POS + 0.001f)
+        && WITHIN(ry, Y_MIN_POS - 0.001f, Y_MAX_POS + 0.001f);
+  }
+
+  #if HAS_BED_PROBE
+    /**
+     * Return whether the given position is within the bed, and whether the nozzle
+     * can reach the position required to put the probe at the given position.
+     *
+     * Example: For a probe offset of -10,+10, then for the probe to reach 0,0 the
+     *          nozzle must be be able to reach +10,-10.
+     */
+    inline bool position_is_reachable_by_probe(const float &rx, const float &ry) {
+      return position_is_reachable(rx - (X_PROBE_OFFSET_FROM_EXTRUDER), ry - (Y_PROBE_OFFSET_FROM_EXTRUDER))
+          && WITHIN(rx, MIN_PROBE_X - 0.001f, MAX_PROBE_X + 0.001f)
+          && WITHIN(ry, MIN_PROBE_Y - 0.001f, MAX_PROBE_Y + 0.001f);
+    }
+  #endif
+
+#endif // CARTESIAN
+
+#if !HAS_BED_PROBE
   FORCE_INLINE bool position_is_reachable_by_probe(const float &rx, const float &ry) { return position_is_reachable(rx, ry); }
 #endif
 
