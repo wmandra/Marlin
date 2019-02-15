@@ -57,6 +57,14 @@
 
 #endif
 
+#if PIN_EXISTS(PHOTOGRAPH)
+  constexpr uint8_t NUM_PULSES = 16;
+  constexpr float PULSE_LENGTH = 0.01524;
+  inline void set_photo_pin(const uint8_t state) { WRITE(PHOTOGRAPH_PIN, state); _delay_ms(PULSE_LENGTH); }
+  inline void tweak_photo_pin() { set_photo_pin(HIGH); set_photo_pin(LOW); }
+  inline void spin_photo_pin() { for (uint8_t i = NUM_PULSES; i--;) tweak_photo_pin(); }
+#endif
+
 /**
  * M240: Trigger a camera by...
  *
@@ -134,17 +142,9 @@ void GcodeSuite::M240() {
 
   #elif HAS_PHOTOGRAPH
 
-    constexpr uint8_t NUM_PULSES = 16;
-    constexpr float PULSE_LENGTH = 0.01524;
-    for (int i = 0; i < NUM_PULSES; i++) {
-      WRITE(PHOTOGRAPH_PIN, HIGH); _delay_ms(PULSE_LENGTH);
-      WRITE(PHOTOGRAPH_PIN, LOW);  _delay_ms(PULSE_LENGTH);
-    }
+    spin_photo_pin();
     delay(7.33);
-    for (int i = 0; i < NUM_PULSES; i++) {
-      WRITE(PHOTOGRAPH_PIN, HIGH); _delay_ms(PULSE_LENGTH);
-      WRITE(PHOTOGRAPH_PIN, LOW);  _delay_ms(PULSE_LENGTH);
-    }
+    spin_photo_pin();
 
   #endif
 
