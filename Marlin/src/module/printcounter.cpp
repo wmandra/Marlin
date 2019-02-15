@@ -21,14 +21,6 @@
  */
 
 #include "../inc/MarlinConfig.h"
-
-#if DISABLED(PRINTCOUNTER)
-
-#include "../libs/stopwatch.h"
-Stopwatch print_job_timer;      // Global Print Job Timer instance
-
-#else // PRINTCOUNTER
-
 #include "printcounter.h"
 #include "../libs/duration_t.h"
 #include "../Marlin.h"
@@ -357,5 +349,3 @@ void PrintCounter::reset() {
     }
   }
 #endif
-
-#endif // PRINTCOUNTER

@@ -194,26 +194,21 @@ class Temperature {
       static volatile int babystepsTodo[3];
     #endif
 
-    #if ENABLED(PREVENT_COLD_EXTRUSION)
-      static bool allow_cold_extrude;
-      static int16_t extrude_min_temp;
-      FORCE_INLINE static bool tooCold(const int16_t temp) { return allow_cold_extrude ? false : temp < extrude_min_temp; }
-      FORCE_INLINE static bool tooColdToExtrude(const uint8_t e) {
-        #if HOTENDS == 1
-          UNUSED(e);
-        #endif
-        return tooCold(degHotend(HOTEND_INDEX));
-      }
-      FORCE_INLINE static bool targetTooColdToExtrude(const uint8_t e) {
-        #if HOTENDS == 1
-          UNUSED(e);
-        #endif
-        return tooCold(degTargetHotend(HOTEND_INDEX));
-      }
-    #else
-      FORCE_INLINE static bool tooColdToExtrude(const uint8_t e) { UNUSED(e); return false; }
-      FORCE_INLINE static bool targetTooColdToExtrude(const uint8_t e) { UNUSED(e); return false; }
-    #endif
+    static bool allow_cold_extrude;
+    static int16_t extrude_min_temp;
+    FORCE_INLINE static bool tooCold(const int16_t temp) { return allow_cold_extrude ? false : temp < extrude_min_temp; }
+    FORCE_INLINE static bool tooColdToExtrude(const uint8_t e) {
+      #if HOTENDS == 1
+        UNUSED(e);
+      #endif
+      return tooCold(degHotend(HOTEND_INDEX));
+    }
+    FORCE_INLINE static bool targetTooColdToExtrude(const uint8_t e) {
+      #if HOTENDS == 1
+        UNUSED(e);
+      #endif
+      return tooCold(degTargetHotend(HOTEND_INDEX));
+    }
 
     FORCE_INLINE static bool hotEnoughToExtrude(const uint8_t e) { return !tooColdToExtrude(e); }
     FORCE_INLINE static bool targetHotEnoughToExtrude(const uint8_t e) { return !targetTooColdToExtrude(e); }
@@ -746,23 +741,15 @@ class Temperature {
     static void min_temp_error(const int8_t e);
     static void max_temp_error(const int8_t e);
 
-    #if ENABLED(THERMAL_PROTECTION_HOTENDS) || HAS_THERMALLY_PROTECTED_BED
+    enum TRState : char { TRInactive, TRFirstHeating, TRStable, TRRunaway };
 
-      enum TRState : char { TRInactive, TRFirstHeating, TRStable, TRRunaway };
+    static void thermal_runaway_protection(TRState * const state, millis_t * const timer, const float &current, const float &target, const int8_t heater_id, const uint16_t period_seconds, const uint16_t hysteresis_degc);
 
-      static void thermal_runaway_protection(TRState * const state, millis_t * const timer, const float &current, const float &target, const int8_t heater_id, const uint16_t period_seconds, const uint16_t hysteresis_degc);
+    static TRState thermal_runaway_state_machine[HOTENDS];
+    static millis_t thermal_runaway_timer[HOTENDS];
 
-      #if ENABLED(THERMAL_PROTECTION_HOTENDS)
-        static TRState thermal_runaway_state_machine[HOTENDS];
-        static millis_t thermal_runaway_timer[HOTENDS];
-      #endif
-
-      #if HAS_THERMALLY_PROTECTED_BED
-        static TRState thermal_runaway_bed_state_machine;
-        static millis_t thermal_runaway_bed_timer;
-      #endif
-
-    #endif // THERMAL_PROTECTION
+    static TRState thermal_runaway_bed_state_machine;
+    static millis_t thermal_runaway_bed_timer;
 
 };
 

@@ -96,10 +96,6 @@ Stepper stepper; // Singleton
 
 // public:
 
-#if ENABLED(X_DUAL_ENDSTOPS) || ENABLED(Y_DUAL_ENDSTOPS) || ENABLED(Z_DUAL_ENDSTOPS)
-  bool Stepper::homing_dual_axis = false;
-#endif
-
 #if HAS_MOTOR_CURRENT_PWM
   uint32_t Stepper::motor_current_setting[3]; // Initialized by settings.load()
 #endif
@@ -115,16 +111,6 @@ bool Stepper::abort_current_block;
 
 #if DISABLED(MIXING_EXTRUDER)
   uint8_t Stepper::last_moved_extruder = 0xFF;
-#endif
-
-#if ENABLED(X_DUAL_ENDSTOPS)
-  bool Stepper::locked_X_motor = false, Stepper::locked_X2_motor = false;
-#endif
-#if ENABLED(Y_DUAL_ENDSTOPS)
-  bool Stepper::locked_Y_motor = false, Stepper::locked_Y2_motor = false;
-#endif
-#if ENABLED(Z_DUAL_ENDSTOPS)
-  bool Stepper::locked_Z_motor = false, Stepper::locked_Z2_motor = false;
 #endif
 
 uint32_t Stepper::acceleration_time, Stepper::deceleration_time;
@@ -151,16 +137,14 @@ uint32_t Stepper::advance_dividend[NUM_AXIS] = { 0 },
   int8_t Stepper::active_extruder;           // Active extruder
 #endif
 
-#if ENABLED(S_CURVE_ACCELERATION)
-  int32_t __attribute__((used)) Stepper::bezier_A __asm__("bezier_A");    // A coefficient in Bézier speed curve with alias for assembler
-  int32_t __attribute__((used)) Stepper::bezier_B __asm__("bezier_B");    // B coefficient in Bézier speed curve with alias for assembler
-  int32_t __attribute__((used)) Stepper::bezier_C __asm__("bezier_C");    // C coefficient in Bézier speed curve with alias for assembler
-  uint32_t __attribute__((used)) Stepper::bezier_F __asm__("bezier_F");   // F coefficient in Bézier speed curve with alias for assembler
-  uint32_t __attribute__((used)) Stepper::bezier_AV __asm__("bezier_AV"); // AV coefficient in Bézier speed curve with alias for assembler
-  bool __attribute__((used)) Stepper::A_negative __asm__("A_negative");   // If A coefficient was negative
-  bool Stepper::bezier_2nd_half;    // =false If Bézier curve has been initialized or not
-#endif
-
+int32_t __attribute__((used)) Stepper::bezier_A __asm__("bezier_A");    // A coefficient in Bézier speed curve with alias for assembler
+int32_t __attribute__((used)) Stepper::bezier_B __asm__("bezier_B");    // B coefficient in Bézier speed curve with alias for assembler
+int32_t __attribute__((used)) Stepper::bezier_C __asm__("bezier_C");    // C coefficient in Bézier speed curve with alias for assembler
+uint32_t __attribute__((used)) Stepper::bezier_F __asm__("bezier_F");   // F coefficient in Bézier speed curve with alias for assembler
+uint32_t __attribute__((used)) Stepper::bezier_AV __asm__("bezier_AV"); // AV coefficient in Bézier speed curve with alias for assembler
+bool __attribute__((used)) Stepper::A_negative __asm__("A_negative");   // If A coefficient was negative
+bool Stepper::bezier_2nd_half;    // =false If Bézier curve has been initialized or not
+  
 uint32_t Stepper::nextMainISR = 0;
 
 #if ENABLED(LIN_ADVANCE)
@@ -180,111 +164,16 @@ uint32_t Stepper::nextMainISR = 0;
 
 int32_t Stepper::ticks_nominal = -1;
 
-#if DISABLED(S_CURVE_ACCELERATION)
-  uint32_t Stepper::acc_step_rate; // needed for deceleration start point
-#endif
-
 volatile int32_t Stepper::endstops_trigsteps[XYZ],
                  Stepper::count_position[NUM_AXIS] = { 0 };
-int8_t Stepper::count_direction[NUM_AXIS] = {
-  1, 1, 1, 1
-  #if ENABLED(HANGPRINTER)
-    , 1
-  #endif
-};
+int8_t Stepper::count_direction[NUM_AXIS] = { 1, 1, 1, 1 };
 
-#if ENABLED(X_DUAL_ENDSTOPS) || ENABLED(Y_DUAL_ENDSTOPS) || ENABLED(Z_DUAL_ENDSTOPS)
-  #define DUAL_ENDSTOP_APPLY_STEP(A,V)                                                                                        \
-    if (homing_dual_axis) {                                                                                                   \
-      if (A##_HOME_DIR < 0) {                                                                                                 \
-        if (!(TEST(endstops.state(), A##_MIN) && count_direction[_AXIS(A)] < 0) && !locked_##A##_motor) A##_STEP_WRITE(V);    \
-        if (!(TEST(endstops.state(), A##2_MIN) && count_direction[_AXIS(A)] < 0) && !locked_##A##2_motor) A##2_STEP_WRITE(V); \
-      }                                                                                                                       \
-      else {                                                                                                                  \
-        if (!(TEST(endstops.state(), A##_MAX) && count_direction[_AXIS(A)] > 0) && !locked_##A##_motor) A##_STEP_WRITE(V);    \
-        if (!(TEST(endstops.state(), A##2_MAX) && count_direction[_AXIS(A)] > 0) && !locked_##A##2_motor) A##2_STEP_WRITE(V); \
-      }                                                                                                                       \
-    }                                                                                                                         \
-    else {                                                                                                                    \
-      A##_STEP_WRITE(V);                                                                                                      \
-      A##2_STEP_WRITE(V);                                                                                                     \
-    }
-#endif
-
-#if ENABLED(X_DUAL_STEPPER_DRIVERS)
-  #define X_APPLY_DIR(v,Q) do{ X_DIR_WRITE(v); X2_DIR_WRITE((v) != INVERT_X2_VS_X_DIR); }while(0)
-  #if ENABLED(X_DUAL_ENDSTOPS)
-    #define X_APPLY_STEP(v,Q) DUAL_ENDSTOP_APPLY_STEP(X,v)
-  #else
-    #define X_APPLY_STEP(v,Q) do{ X_STEP_WRITE(v); X2_STEP_WRITE(v); }while(0)
-  #endif
-#elif ENABLED(DUAL_X_CARRIAGE)
-  #define X_APPLY_DIR(v,ALWAYS) \
-    if (extruder_duplication_enabled || ALWAYS) { \
-      X_DIR_WRITE(v); \
-      X2_DIR_WRITE(v); \
-    } \
-    else { \
-      if (movement_extruder()) X2_DIR_WRITE(v); else X_DIR_WRITE(v); \
-    }
-  #define X_APPLY_STEP(v,ALWAYS) \
-    if (extruder_duplication_enabled || ALWAYS) { \
-      X_STEP_WRITE(v); \
-      X2_STEP_WRITE(v); \
-    } \
-    else { \
-      if (movement_extruder()) X2_STEP_WRITE(v); else X_STEP_WRITE(v); \
-    }
-#else
-  #define X_APPLY_DIR(v,Q) X_DIR_WRITE(v)
-  #define X_APPLY_STEP(v,Q) X_STEP_WRITE(v)
-#endif
-
-#if ENABLED(Y_DUAL_STEPPER_DRIVERS)
-  #define Y_APPLY_DIR(v,Q) do{ Y_DIR_WRITE(v); Y2_DIR_WRITE((v) != INVERT_Y2_VS_Y_DIR); }while(0)
-  #if ENABLED(Y_DUAL_ENDSTOPS)
-    #define Y_APPLY_STEP(v,Q) DUAL_ENDSTOP_APPLY_STEP(Y,v)
-  #else
-    #define Y_APPLY_STEP(v,Q) do{ Y_STEP_WRITE(v); Y2_STEP_WRITE(v); }while(0)
-  #endif
-#else
-  #define Y_APPLY_DIR(v,Q) Y_DIR_WRITE(v)
-  #define Y_APPLY_STEP(v,Q) Y_STEP_WRITE(v)
-#endif
-
-#if ENABLED(Z_DUAL_STEPPER_DRIVERS)
-  #define Z_APPLY_DIR(v,Q) do{ Z_DIR_WRITE(v); Z2_DIR_WRITE(v); }while(0)
-  #if ENABLED(Z_DUAL_ENDSTOPS)
-    #define Z_APPLY_STEP(v,Q) DUAL_ENDSTOP_APPLY_STEP(Z,v)
-  #else
-    #define Z_APPLY_STEP(v,Q) do{ Z_STEP_WRITE(v); Z2_STEP_WRITE(v); }while(0)
-  #endif
-#else
-  #define Z_APPLY_DIR(v,Q) Z_DIR_WRITE(v)
-  #define Z_APPLY_STEP(v,Q) Z_STEP_WRITE(v)
-#endif
-
-/**
- * Hangprinter's mapping {A,B,C,D} <-> {X,Y,Z,E1} happens here.
- * If you have two extruders: {A,B,C,D} <-> {X,Y,Z,E2}
- * ... etc up to max 4 extruders.
- * Place D connector on your first "free" extruder output.
- */
-#if ENABLED(HANGPRINTER)
-  #define A_APPLY_DIR(v,Q)  X_APPLY_DIR(v,Q)
-  #define A_APPLY_STEP(v,Q) X_APPLY_STEP(v,Q)
-
-  #define B_APPLY_DIR(v,Q)  Y_APPLY_DIR(v,Q)
-  #define B_APPLY_STEP(v,Q) Y_APPLY_STEP(v,Q)
-
-  #define C_APPLY_DIR(v,Q)  Z_APPLY_DIR(v,Q)
-  #define C_APPLY_STEP(v,Q) Z_APPLY_STEP(v,Q)
-
-  #define __D_APPLY(I,T,v) E##I##_##T##_WRITE(v)
-  #define _D_APPLY(I,T,v) __D_APPLY(I,T,v)
-  #define D_APPLY_DIR(v,Q)  _D_APPLY(EXTRUDERS, DIR, v)
-  #define D_APPLY_STEP(v,Q) _D_APPLY(EXTRUDERS, STEP, v)
-#endif
+#define X_APPLY_DIR(v,Q) X_DIR_WRITE(v)
+#define X_APPLY_STEP(v,Q) X_STEP_WRITE(v)
+#define Y_APPLY_DIR(v,Q) Y_DIR_WRITE(v)
+#define Y_APPLY_STEP(v,Q) Y_STEP_WRITE(v)
+#define Z_APPLY_DIR(v,Q) Z_DIR_WRITE(v)
+#define Z_APPLY_STEP(v,Q) Z_STEP_WRITE(v)
 
 #if DISABLED(MIXING_EXTRUDER)
   #define E_APPLY_STEP(v,Q) E_STEP_WRITE(active_extruder, v)
@@ -383,9 +272,6 @@ void Stepper::set_directions() {
   #if HAS_Z_DIR
     SET_STEP_DIR(Z); // C
   #endif
-  #if ENABLED(HANGPRINTER)
-    SET_STEP_DIR(D);
-  #endif
 
   #if DISABLED(LIN_ADVANCE)
     #if ENABLED(MIXING_EXTRUDER)
@@ -415,7 +301,6 @@ void Stepper::set_directions() {
   #endif
 }
 
-#if ENABLED(S_CURVE_ACCELERATION)
   /**
    *  This uses a quintic (fifth-degree) Bézier polynomial for the velocity curve, giving
    *  a "linear pop" velocity curve; with pop being the sixth derivative of position:
@@ -1138,8 +1023,6 @@ void Stepper::set_directions() {
     return (r2 | (uint16_t(r3) << 8)) | (uint32_t(r4) << 16);
   }
 
-#endif // S_CURVE_ACCELERATION
-
 /**
  * Stepper Driver Interrupt
  *
@@ -1337,30 +1220,15 @@ void Stepper::stepper_pulse_phase_isr() {
     }while(0)
 
     // Pulse start
-    #if ENABLED(HANGPRINTER)
-      #if HAS_A_STEP
-        PULSE_START(A);
-      #endif
-      #if HAS_B_STEP
-        PULSE_START(B);
-      #endif
-      #if HAS_C_STEP
-        PULSE_START(C);
-      #endif
-      #if HAS_D_STEP
-        PULSE_START(D);
-      #endif
-    #else
-      #if HAS_X_STEP
-        PULSE_START(X);
-      #endif
-      #if HAS_Y_STEP
-        PULSE_START(Y);
-      #endif
-      #if HAS_Z_STEP
-        PULSE_START(Z);
-      #endif
-    #endif // HANGPRINTER
+    #if HAS_X_STEP
+      PULSE_START(X);
+    #endif
+    #if HAS_Y_STEP
+      PULSE_START(Y);
+    #endif
+    #if HAS_Z_STEP
+      PULSE_START(Z);
+    #endif
 
     // Pulse E/Mixing extruders
     #if ENABLED(LIN_ADVANCE)
@@ -1404,29 +1272,14 @@ void Stepper::stepper_pulse_phase_isr() {
     // Add the delay needed to ensure the maximum driver rate is enforced
     if (signed(added_step_ticks) > 0) pulse_end += hal_timer_t(added_step_ticks);
 
-    #if ENABLED(HANGPRINTER)
-      #if HAS_A_STEP
-        PULSE_STOP(A);
-      #endif
-      #if HAS_B_STEP
-        PULSE_STOP(B);
-      #endif
-      #if HAS_C_STEP
-        PULSE_STOP(C);
-      #endif
-      #if HAS_D_STEP
-        PULSE_STOP(D);
-      #endif
-    #else
-      #if HAS_X_STEP
-        PULSE_STOP(X);
-      #endif
-      #if HAS_Y_STEP
-        PULSE_STOP(Y);
-      #endif
-      #if HAS_Z_STEP
-        PULSE_STOP(Z);
-      #endif
+    #if HAS_X_STEP
+      PULSE_STOP(X);
+    #endif
+    #if HAS_Y_STEP
+      PULSE_STOP(Y);
+    #endif
+    #if HAS_Z_STEP
+      PULSE_STOP(Z);
     #endif
 
     #if DISABLED(LIN_ADVANCE)
@@ -1482,16 +1335,11 @@ uint32_t Stepper::stepper_block_phase_isr() {
       // Are we in acceleration phase ?
       if (step_events_completed <= accelerate_until) { // Calculate new timer value
 
-        #if ENABLED(S_CURVE_ACCELERATION)
-          // Get the next speed to use (Jerk limited!)
-          uint32_t acc_step_rate =
-            acceleration_time < current_block->acceleration_time
-              ? _eval_bezier_curve(acceleration_time)
-              : current_block->cruise_rate;
-        #else
-          acc_step_rate = STEP_MULTIPLY(acceleration_time, current_block->acceleration_rate) + current_block->initial_rate;
-          NOMORE(acc_step_rate, current_block->nominal_rate);
-        #endif
+        // Get the next speed to use (Jerk limited!)
+        uint32_t acc_step_rate =
+          acceleration_time < current_block->acceleration_time
+            ? _eval_bezier_curve(acceleration_time)
+            : current_block->cruise_rate;
 
         // acc_step_rate is in steps/second
 
@@ -1511,32 +1359,20 @@ uint32_t Stepper::stepper_block_phase_isr() {
       else if (step_events_completed > decelerate_after) {
         uint32_t step_rate;
 
-        #if ENABLED(S_CURVE_ACCELERATION)
-          // If this is the 1st time we process the 2nd half of the trapezoid...
-          if (!bezier_2nd_half) {
-            // Initialize the Bézier speed curve
-            _calc_bezier_curve_coeffs(current_block->cruise_rate, current_block->final_rate, current_block->deceleration_time_inverse);
-            bezier_2nd_half = true;
-            // The first point starts at cruise rate. Just save evaluation of the Bézier curve
-            step_rate = current_block->cruise_rate;
-          }
-          else {
-            // Calculate the next speed to use
-            step_rate = deceleration_time < current_block->deceleration_time
-              ? _eval_bezier_curve(deceleration_time)
-              : current_block->final_rate;
-          }
-        #else
-
-          // Using the old trapezoidal control
-          step_rate = STEP_MULTIPLY(deceleration_time, current_block->acceleration_rate);
-          if (step_rate < acc_step_rate) { // Still decelerating?
-            step_rate = acc_step_rate - step_rate;
-            NOLESS(step_rate, current_block->final_rate);
-          }
-          else
-            step_rate = current_block->final_rate;
-        #endif
+        // If this is the 1st time we process the 2nd half of the trapezoid...
+        if (!bezier_2nd_half) {
+          // Initialize the Bézier speed curve
+          _calc_bezier_curve_coeffs(current_block->cruise_rate, current_block->final_rate, current_block->deceleration_time_inverse);
+          bezier_2nd_half = true;
+          // The first point starts at cruise rate. Just save evaluation of the Bézier curve
+          step_rate = current_block->cruise_rate;
+        }
+        else {
+          // Calculate the next speed to use
+          step_rate = deceleration_time < current_block->deceleration_time
+            ? _eval_bezier_curve(deceleration_time)
+            : current_block->final_rate;
+        }
 
         // step_rate is in steps/second
 
@@ -1584,13 +1420,7 @@ uint32_t Stepper::stepper_block_phase_isr() {
 
       // Sync block? Sync the stepper counts and return
       while (TEST(current_block->flag, BLOCK_BIT_SYNC_POSITION)) {
-        _set_position(
-          current_block->position[A_AXIS], current_block->position[B_AXIS], current_block->position[C_AXIS],
-          #if ENABLED(HANGPRINTER)
-            current_block->position[D_AXIS],
-          #endif
-          current_block->position[E_AXIS]
-        );
+        _set_position(current_block->position[A_AXIS], current_block->position[B_AXIS], current_block->position[C_AXIS], current_block->position[E_AXIS]);
         planner.discard_current_block();
 
         // Try to get a new block
@@ -1690,23 +1520,12 @@ uint32_t Stepper::stepper_block_phase_isr() {
       step_event_count = current_block->step_event_count << oversampling;
 
       // Initialize Bresenham delta errors to 1/2
-      #if ENABLED(HANGPRINTER)
-        delta_error[A_AXIS] = delta_error[B_AXIS] = delta_error[C_AXIS] = delta_error[D_AXIS] = delta_error[E_AXIS] = -int32_t(step_event_count);
-      #else
-        delta_error[X_AXIS] = delta_error[Y_AXIS] = delta_error[Z_AXIS] = delta_error[E_AXIS] = -int32_t(step_event_count);
-      #endif
+      delta_error[X_AXIS] = delta_error[Y_AXIS] = delta_error[Z_AXIS] = delta_error[E_AXIS] = -int32_t(step_event_count);
 
       // Calculate Bresenham dividends
-      #if ENABLED(HANGPRINTER)
-        advance_dividend[A_AXIS] = current_block->steps[A_AXIS] << 1;
-        advance_dividend[B_AXIS] = current_block->steps[B_AXIS] << 1;
-        advance_dividend[C_AXIS] = current_block->steps[C_AXIS] << 1;
-        advance_dividend[D_AXIS] = current_block->steps[D_AXIS] << 1;
-      #else
-        advance_dividend[X_AXIS] = current_block->steps[X_AXIS] << 1;
-        advance_dividend[Y_AXIS] = current_block->steps[Y_AXIS] << 1;
-        advance_dividend[Z_AXIS] = current_block->steps[Z_AXIS] << 1;
-      #endif
+      advance_dividend[X_AXIS] = current_block->steps[X_AXIS] << 1;
+      advance_dividend[Y_AXIS] = current_block->steps[Y_AXIS] << 1;
+      advance_dividend[Z_AXIS] = current_block->steps[Z_AXIS] << 1;
       advance_dividend[E_AXIS] = current_block->steps[E_AXIS] << 1;
 
       // Calculate Bresenham divisor
@@ -1784,17 +1603,10 @@ uint32_t Stepper::stepper_block_phase_isr() {
       // Mark the time_nominal as not calculated yet
       ticks_nominal = -1;
 
-      #if DISABLED(S_CURVE_ACCELERATION)
-        // Set as deceleration point the initial rate of the block
-        acc_step_rate = current_block->initial_rate;
-      #endif
-
-      #if ENABLED(S_CURVE_ACCELERATION)
-        // Initialize the Bézier speed curve
-        _calc_bezier_curve_coeffs(current_block->initial_rate, current_block->cruise_rate, current_block->acceleration_time_inverse);
-        // We haven't started the 2nd half of the trapezoid
-        bezier_2nd_half = false;
-      #endif
+      // Initialize the Bézier speed curve
+      _calc_bezier_curve_coeffs(current_block->initial_rate, current_block->cruise_rate, current_block->acceleration_time_inverse);
+      // We haven't started the 2nd half of the trapezoid
+      bezier_2nd_half = false;
 
       // Calculate the initial timer interval
       interval = calc_timer_interval(current_block->initial_rate, oversampling_factor, &steps_per_isr);
@@ -1938,20 +1750,11 @@ void Stepper::init() {
   #if HAS_X_DIR
     X_DIR_INIT;
   #endif
-  #if HAS_X2_DIR
-    X2_DIR_INIT;
-  #endif
   #if HAS_Y_DIR
     Y_DIR_INIT;
-    #if ENABLED(Y_DUAL_STEPPER_DRIVERS) && HAS_Y2_DIR
-      Y2_DIR_INIT;
-    #endif
   #endif
   #if HAS_Z_DIR
     Z_DIR_INIT;
-    #if ENABLED(Z_DUAL_STEPPER_DRIVERS) && HAS_Z2_DIR
-      Z2_DIR_INIT;
-    #endif
   #endif
   #if HAS_E0_DIR
     E0_DIR_INIT;
@@ -1973,26 +1776,14 @@ void Stepper::init() {
   #if HAS_X_ENABLE
     X_ENABLE_INIT;
     if (!X_ENABLE_ON) X_ENABLE_WRITE(HIGH);
-    #if (ENABLED(DUAL_X_CARRIAGE) || ENABLED(X_DUAL_STEPPER_DRIVERS)) && HAS_X2_ENABLE
-      X2_ENABLE_INIT;
-      if (!X_ENABLE_ON) X2_ENABLE_WRITE(HIGH);
-    #endif
   #endif
   #if HAS_Y_ENABLE
     Y_ENABLE_INIT;
     if (!Y_ENABLE_ON) Y_ENABLE_WRITE(HIGH);
-    #if ENABLED(Y_DUAL_STEPPER_DRIVERS) && HAS_Y2_ENABLE
-      Y2_ENABLE_INIT;
-      if (!Y_ENABLE_ON) Y2_ENABLE_WRITE(HIGH);
-    #endif
   #endif
   #if HAS_Z_ENABLE
     Z_ENABLE_INIT;
     if (!Z_ENABLE_ON) Z_ENABLE_WRITE(HIGH);
-    #if ENABLED(Z_DUAL_STEPPER_DRIVERS) && HAS_Z2_ENABLE
-      Z2_ENABLE_INIT;
-      if (!Z_ENABLE_ON) Z2_ENABLE_WRITE(HIGH);
-    #endif
   #endif
   #if HAS_E0_ENABLE
     E0_ENABLE_INIT;
@@ -2028,42 +1819,30 @@ void Stepper::init() {
 
   // Init Step Pins
   #if HAS_X_STEP
-    #if ENABLED(X_DUAL_STEPPER_DRIVERS) || ENABLED(DUAL_X_CARRIAGE)
-      X2_STEP_INIT;
-      X2_STEP_WRITE(INVERT_X_STEP_PIN);
-    #endif
     AXIS_INIT(X, X);
   #endif
 
   #if HAS_Y_STEP
-    #if ENABLED(Y_DUAL_STEPPER_DRIVERS)
-      Y2_STEP_INIT;
-      Y2_STEP_WRITE(INVERT_Y_STEP_PIN);
-    #endif
     AXIS_INIT(Y, Y);
   #endif
 
   #if HAS_Z_STEP
-    #if ENABLED(Z_DUAL_STEPPER_DRIVERS)
-      Z2_STEP_INIT;
-      Z2_STEP_WRITE(INVERT_Z_STEP_PIN);
-    #endif
     AXIS_INIT(Z, Z);
   #endif
 
   #if E_STEPPERS > 0 && HAS_E0_STEP
     E_AXIS_INIT(0);
   #endif
-  #if (E_STEPPERS > 1 || (E_STEPPERS == 1 && ENABLED(HANGPRINTER))) && HAS_E1_STEP
+  #if E_STEPPERS > 1 && HAS_E1_STEP
     E_AXIS_INIT(1);
   #endif
-  #if (E_STEPPERS > 2 || (E_STEPPERS == 2 && ENABLED(HANGPRINTER))) && HAS_E2_STEP
+  #if E_STEPPERS > 2 && HAS_E2_STEP
     E_AXIS_INIT(2);
   #endif
-  #if (E_STEPPERS > 3 || (E_STEPPERS == 3 && ENABLED(HANGPRINTER))) && HAS_E3_STEP
+  #if E_STEPPERS > 3 && HAS_E3_STEP
     E_AXIS_INIT(3);
   #endif
-  #if (E_STEPPERS > 4 || (E_STEPPERS == 4 && ENABLED(HANGPRINTER))) && HAS_E4_STEP
+  #if E_STEPPERS > 4 && HAS_E4_STEP
     E_AXIS_INIT(4);
   #endif
 
@@ -2087,12 +1866,7 @@ void Stepper::init() {
  * This allows get_axis_position_mm to correctly
  * derive the current XYZ position later on.
  */
-void Stepper::_set_position(const int32_t &a, const int32_t &b, const int32_t &c,
-    #if ENABLED(HANGPRINTER)
-      const int32_t &d,
-    #endif
-  const int32_t &e
-) {
+void Stepper::_set_position(const int32_t &a, const int32_t &b, const int32_t &c, const int32_t &e) {
   #if CORE_IS_XY
     // corexy positioning
     // these equations follow the form of the dA and dB equations on http://www.corexy.com/theory.html
@@ -2114,9 +1888,6 @@ void Stepper::_set_position(const int32_t &a, const int32_t &b, const int32_t &c
     count_position[X_AXIS] = a;
     count_position[Y_AXIS] = b;
     count_position[Z_AXIS] = c;
-    #if ENABLED(HANGPRINTER)
-      count_position[D_AXIS] = d;
-    #endif
   #endif
   count_position[E_AXIS] = e;
 }
@@ -2183,37 +1954,30 @@ void Stepper::report_positions() {
 
   const int32_t xpos = count_position[X_AXIS],
                 ypos = count_position[Y_AXIS],
-                #if ENABLED(HANGPRINTER)
-                  dpos = count_position[D_AXIS],
-                #endif
                 zpos = count_position[Z_AXIS];
 
   if (was_enabled) ENABLE_STEPPER_DRIVER_INTERRUPT();
 
-  #if CORE_IS_XY || CORE_IS_XZ || IS_DELTA || IS_SCARA || ENABLED(HANGPRINTER)
+  #if CORE_IS_XY || CORE_IS_XZ
     SERIAL_PROTOCOLPGM(MSG_COUNT_A);
   #else
     SERIAL_PROTOCOLPGM(MSG_COUNT_X);
   #endif
   SERIAL_PROTOCOL(xpos);
 
-  #if CORE_IS_XY || CORE_IS_YZ || IS_DELTA || IS_SCARA || ENABLED(HANGPRINTER)
+  #if CORE_IS_XY || CORE_IS_YZ
     SERIAL_PROTOCOLPGM(" B:");
   #else
     SERIAL_PROTOCOLPGM(" Y:");
   #endif
   SERIAL_PROTOCOL(ypos);
 
-  #if CORE_IS_XZ || CORE_IS_YZ || IS_DELTA || ENABLED(HANGPRINTER)
+  #if CORE_IS_XZ || CORE_IS_YZ
     SERIAL_PROTOCOLPGM(" C:");
   #else
     SERIAL_PROTOCOLPGM(" Z:");
   #endif
   SERIAL_PROTOCOL(zpos);
-
-  #if ENABLED(HANGPRINTER)
-    SERIAL_PROTOCOLPAIR(" D:", dpos);
-  #endif
 
   SERIAL_EOL();
 }
