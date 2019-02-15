@@ -40,7 +40,12 @@ enum AxisEnum : unsigned char {
   Z_AXIS    = 2,
   C_AXIS    = 2,
   E_CART    = 3,
-  E_AXIS  = 3,
+  #if ENABLED(HANGPRINTER) // Hangprinter order: A_AXIS, B_AXIS, C_AXIS, D_AXIS, E_AXIS
+    D_AXIS  = 3,
+    E_AXIS  = 4,
+  #else
+    E_AXIS  = 3,
+  #endif
   X_HEAD, Y_HEAD, Z_HEAD,
   ALL_AXES  = 0xFE,
   NO_AXIS   = 0xFF
@@ -122,13 +127,15 @@ enum DebugFlags : unsigned char {
  * States for managing Marlin and host communication
  * Marlin sends messages if blocked or busy
  */
-enum MarlinBusyState : char {
-  NOT_BUSY,           // Not in a handler
-  IN_HANDLER,         // Processing a GCode
-  IN_PROCESS,         // Known to be blocking command input (as in G29)
-  PAUSED_FOR_USER,    // Blocking pending any input
-  PAUSED_FOR_INPUT    // Blocking pending text input (concept)
-};
+#if ENABLED(HOST_KEEPALIVE_FEATURE)
+  enum MarlinBusyState : char {
+    NOT_BUSY,           // Not in a handler
+    IN_HANDLER,         // Processing a GCode
+    IN_PROCESS,         // Known to be blocking command input (as in G29)
+    PAUSED_FOR_USER,    // Blocking pending any input
+    PAUSED_FOR_INPUT    // Blocking pending text input (concept)
+  };
+#endif
 
 /**
  * SD Card

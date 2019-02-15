@@ -41,7 +41,7 @@
 
 #include "../inc/MarlinConfig.h"
 
-#if ABL_PLANAR
+#if ABL_PLANAR || (HAS_BED_PROBE && ENABLED(AUTO_BED_LEVELING_UBL))
 
 #include "vector_3.h"
 #include "../core/serial.h"
@@ -162,4 +162,4 @@ void matrix_3x3::debug(const char * const title) {
   }
 }
 
-#endif // ABL_PLANAR
+#endif // HAS_ABL

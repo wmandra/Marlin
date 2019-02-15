@@ -39,17 +39,18 @@
 
   #include "MarlinSerial.h"
   #include "../Marlin.h"
-  #include "../feature/emergency_parser/emergency_parser.h"
 
   struct ring_buffer_r {
     unsigned char buffer[RX_BUFFER_SIZE];
     volatile ring_buffer_pos_t head, tail;
   };
 
-  struct ring_buffer_t {
+  #if TX_BUFFER_SIZE > 0
+    struct ring_buffer_t {
       unsigned char buffer[TX_BUFFER_SIZE];
       volatile uint8_t head, tail;
     };
+  #endif
 
   #if UART_PRESENT(SERIAL_PORT)
     ring_buffer_r rx_buffer = { { 0 }, 0, 0 };
@@ -67,8 +68,28 @@
     uint8_t xon_xoff_state = XON_XOFF_CHAR_SENT | XON_CHAR;
   #endif
 
+  #if ENABLED(SERIAL_STATS_DROPPED_RX)
+    uint8_t rx_dropped_bytes = 0;
+  #endif
+
+  #if ENABLED(SERIAL_STATS_RX_BUFFER_OVERRUNS)
+    uint8_t rx_buffer_overruns = 0;
+  #endif
+
+  #if ENABLED(SERIAL_STATS_RX_FRAMING_ERRORS)
+    uint8_t rx_framing_errors = 0;
+  #endif
+
+  #if ENABLED(SERIAL_STATS_MAX_RX_QUEUED)
+    ring_buffer_pos_t rx_max_enqueued = 0;
+  #endif
+
   // A SW memory barrier, to ensure GCC does not overoptimize loops
   #define sw_barrier() asm volatile("": : :"memory");
+
+  #if ENABLED(EMERGENCY_PARSER)
+    #include "emergency_parser.h"
+  #endif
 
   // "Atomically" read the RX head index value without disabling interrupts:
   // This MUST be called with RX interrupts enabled, and CAN'T be called
@@ -147,10 +168,25 @@
     // Get the next element
     ring_buffer_pos_t i = (ring_buffer_pos_t)(h + 1) & (ring_buffer_pos_t)(RX_BUFFER_SIZE - 1);
 
+    // This must read the M_UCSRxA register before reading the received byte to detect error causes
+    #if ENABLED(SERIAL_STATS_DROPPED_RX)
+      if (TEST(M_UCSRxA, M_DORx) && !++rx_dropped_bytes) --rx_dropped_bytes;
+    #endif
+
+    #if ENABLED(SERIAL_STATS_RX_BUFFER_OVERRUNS)
+      if (TEST(M_UCSRxA, M_DORx) && !++rx_buffer_overruns) --rx_buffer_overruns;
+    #endif
+
+    #if ENABLED(SERIAL_STATS_RX_FRAMING_ERRORS)
+      if (TEST(M_UCSRxA, M_FEx) && !++rx_framing_errors) --rx_framing_errors;
+    #endif
+
     // Read the character from the USART
     uint8_t c = M_UDRx;
 
-    emergency_parser.update(c);
+    #if ENABLED(EMERGENCY_PARSER)
+      emergency_parser.update(c);
+    #endif
 
     // If the character is to be stored at the index just before the tail
     // (such that the head would advance to the current tail), the RX FIFO is
@@ -159,6 +195,17 @@
       rx_buffer.buffer[h] = c;
       h = i;
     }
+    #if ENABLED(SERIAL_STATS_DROPPED_RX)
+      else if (!++rx_dropped_bytes) --rx_dropped_bytes;
+    #endif
+
+    #if ENABLED(SERIAL_STATS_MAX_RX_QUEUED)
+      // Calculate count of bytes stored into the RX buffer
+      const ring_buffer_pos_t rx_count = (ring_buffer_pos_t)(h - t) & (ring_buffer_pos_t)(RX_BUFFER_SIZE - 1);
+
+      // Keep track of the maximum count of enqueued bytes
+      NOLESS(rx_max_enqueued, rx_count);
+    #endif
 
     #if ENABLED(SERIAL_XON_XOFF)
       // If the last char that was sent was an XON
@@ -194,7 +241,9 @@
               // Read the character from the USART
               c = M_UDRx;
 
-              emergency_parser.update(c);
+              #if ENABLED(EMERGENCY_PARSER)
+                emergency_parser.update(c);
+              #endif
 
               // If the character is to be stored at the index just before the tail
               // (such that the head would advance to the current tail), the FIFO is
@@ -203,6 +252,9 @@
                 rx_buffer.buffer[h] = c;
                 h = i;
               }
+              #if ENABLED(SERIAL_STATS_DROPPED_RX)
+                else if (!++rx_dropped_bytes) --rx_dropped_bytes;
+              #endif
             }
             sw_barrier();
           }
@@ -231,7 +283,9 @@
               // Read the character from the USART
               c = M_UDRx;
 
-              emergency_parser.update(c);
+              #if ENABLED(EMERGENCY_PARSER)
+                emergency_parser.update(c);
+              #endif
 
               // If the character is to be stored at the index just before the tail
               // (such that the head would advance to the current tail), the FIFO is
@@ -240,6 +294,9 @@
                 rx_buffer.buffer[h] = c;
                 h = i;
               }
+              #if ENABLED(SERIAL_STATS_DROPPED_RX)
+                else if (!++rx_dropped_bytes) --rx_dropped_bytes;
+              #endif
             }
             sw_barrier();
           }
@@ -387,10 +444,17 @@
         // Get count of bytes in the RX buffer
         const ring_buffer_pos_t rx_count = (ring_buffer_pos_t)(h - t) & (ring_buffer_pos_t)(RX_BUFFER_SIZE - 1);
         if (rx_count < (RX_BUFFER_SIZE) / 10) {
-          // Signal we want an XON character to be sent.
-          xon_xoff_state = XON_CHAR;
-          // Enable TX ISR. Non atomic, but it will eventually enable them
-          SBI(M_UCSRxB, M_UDRIEx);
+          #if TX_BUFFER_SIZE > 0
+            // Signal we want an XON character to be sent.
+            xon_xoff_state = XON_CHAR;
+            // Enable TX ISR. Non atomic, but it will eventually enable them
+            SBI(M_UCSRxB, M_UDRIEx);
+          #else
+            // If not using TX interrupts, we must send the XON char now
+            xon_xoff_state = XON_CHAR | XON_XOFF_CHAR_SENT;
+            while (!TEST(M_UCSRxA, M_UDREx)) sw_barrier();
+            M_UDRx = XON_CHAR;
+          #endif
         }
       }
     #endif
@@ -414,10 +478,17 @@
     #if ENABLED(SERIAL_XON_XOFF)
       // If the XOFF char was sent, or about to be sent...
       if ((xon_xoff_state & XON_XOFF_CHAR_MASK) == XOFF_CHAR) {
-        // Signal we want an XON character to be sent.
-        xon_xoff_state = XON_CHAR;
-        // Enable TX ISR. Non atomic, but it will eventually enable it.
-        SBI(M_UCSRxB, M_UDRIEx);
+        #if TX_BUFFER_SIZE > 0
+          // Signal we want an XON character to be sent.
+          xon_xoff_state = XON_CHAR;
+          // Enable TX ISR. Non atomic, but it will eventually enable it.
+          SBI(M_UCSRxB, M_UDRIEx);
+        #else
+          // If not using TX interrupts, we must send the XON char now
+          xon_xoff_state = XON_CHAR | XON_XOFF_CHAR_SENT;
+          while (!TEST(M_UCSRxA, M_UDREx)) sw_barrier();
+          M_UDRx = XON_CHAR;
+        #endif
       }
     #endif
   }

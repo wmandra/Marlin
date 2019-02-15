@@ -63,11 +63,13 @@
 #define BOARD_MKS_BASE_HEROIC   41    // MKS BASE 1.0 with Heroic HR4982 stepper drivers
 #define BOARD_MKS_GEN_13        47    // MKS GEN v1.3 or 1.4
 #define BOARD_MKS_GEN_L         53    // MKS GEN L
+#define BOARD_ZRIB_V20          504   // zrib V2.0 control board (Chinese knock off RAMPS replica)
 #define BOARD_FELIX2            37    // Felix 2.0+ Electronics Board (RAMPS like)
 #define BOARD_RIGIDBOARD        42    // Invent-A-Part RigidBoard
 #define BOARD_RIGIDBOARD_V2     52    // Invent-A-Part RigidBoard V2
 #define BOARD_SAINSMART_2IN1    49    // Sainsmart 2-in-1 board
 #define BOARD_ULTIMAKER         7     // Ultimaker
+#define BOARD_ULTIMAKER_OLD     71    // Ultimaker (Older electronics. Pre 1.5.4. This is rare)
 #define BOARD_AZTEEG_X3         67    // Azteeg X3
 #define BOARD_AZTEEG_X3_PRO     68    // Azteeg X3 Pro
 #define BOARD_ULTIMAIN_2        72    // Ultimainboard 2.x (Uses TEMP_SENSOR 20)

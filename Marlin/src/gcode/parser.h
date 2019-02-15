@@ -57,14 +57,27 @@ class GCodeParser {
 
 private:
   static char *value_ptr;           // Set by seen, used to fetch the value
-  static uint32_t codebits;       // Parameters pre-scanned
-  static uint8_t param[26];       // For A-Z, offsets into command args
+
+  #if ENABLED(FASTER_GCODE_PARSER)
+    static uint32_t codebits;       // Parameters pre-scanned
+    static uint8_t param[26];       // For A-Z, offsets into command args
+  #else
+    static char *command_args;      // Args start here, for slow scan
+  #endif
 
 public:
 
   // Global states for GCode-level units features
 
   static bool volumetric_enabled;
+
+  #if ENABLED(INCH_MODE_SUPPORT)
+    static float linear_unit_factor, volumetric_unit_factor;
+  #endif
+
+  #if ENABLED(TEMPERATURE_UNITS_SUPPORT)
+    static TempUnit input_temp_units;
+  #endif
 
   // Command line state
   static char *command_ptr,               // The command, so it can be echoed
@@ -81,6 +94,9 @@ public:
   #endif
 
   GCodeParser() {
+    #if ENABLED(INCH_MODE_SUPPORT)
+      set_input_linear_units(LINEARUNIT_MM);
+    #endif
   }
 
   // Reset is done before parsing
@@ -96,47 +112,66 @@ public:
     return valid_signless(p) || ((p[0] == '-' || p[0] == '+') && valid_signless(&p[1])); // [-+]?.?[0-9]
   }
 
-  FORCE_INLINE static bool valid_int(const char * const p) {
-    return NUMERIC(p[0]) || ((p[0] == '-' || p[0] == '+') && NUMERIC(p[1])); // [-+]?[0-9]
-  }
+  #if ENABLED(FASTER_GCODE_PARSER)
 
-  // Set the flag and pointer for a parameter
-  static void set(const char c, char * const ptr) {
-    const uint8_t ind = LETTER_BIT(c);
-    if (ind >= COUNT(param)) return;           // Only A-Z
-    SBI32(codebits, ind);                      // parameter exists
-    param[ind] = ptr ? ptr - command_ptr : 0;  // parameter offset or 0
-    #if ENABLED(DEBUG_GCODE_PARSER)
-      if (codenum == 800) {
-        SERIAL_ECHOPAIR("Set bit ", (int)ind);
-        SERIAL_ECHOPAIR(" of codebits (", hex_address((void*)(codebits >> 16)));
-        print_hex_word((uint16_t)(codebits & 0xFFFF));
-        SERIAL_ECHOLNPAIR(") | param = ", (int)param[ind]);
-      }
-    #endif
-  }
+    FORCE_INLINE static bool valid_int(const char * const p) {
+      return NUMERIC(p[0]) || ((p[0] == '-' || p[0] == '+') && NUMERIC(p[1])); // [-+]?[0-9]
+    }
 
-  // Code seen bit was set. If not found, value_ptr is unchanged.
-  // This allows "if (seen('A')||seen('B'))" to use the last-found value.
-  static bool seen(const char c) {
-    const uint8_t ind = LETTER_BIT(c);
-    if (ind >= COUNT(param)) return false; // Only A-Z
-    const bool b = TEST32(codebits, ind);
-    if (b) {
+    // Set the flag and pointer for a parameter
+    static void set(const char c, char * const ptr) {
+      const uint8_t ind = LETTER_BIT(c);
+      if (ind >= COUNT(param)) return;           // Only A-Z
+      SBI32(codebits, ind);                      // parameter exists
+      param[ind] = ptr ? ptr - command_ptr : 0;  // parameter offset or 0
       #if ENABLED(DEBUG_GCODE_PARSER)
         if (codenum == 800) {
-          SERIAL_CHAR('\''); SERIAL_CHAR(c); SERIAL_ECHOLNPGM("' is seen");
+          SERIAL_ECHOPAIR("Set bit ", (int)ind);
+          SERIAL_ECHOPAIR(" of codebits (", hex_address((void*)(codebits >> 16)));
+          print_hex_word((uint16_t)(codebits & 0xFFFF));
+          SERIAL_ECHOLNPAIR(") | param = ", (int)param[ind]);
         }
       #endif
-      char * const ptr = command_ptr + param[ind];
-      value_ptr = param[ind] && valid_float(ptr) ? ptr : (char*)NULL;
     }
-    return b;
-  }
 
-  static bool seen_any() { return !!codebits; }
+    // Code seen bit was set. If not found, value_ptr is unchanged.
+    // This allows "if (seen('A')||seen('B'))" to use the last-found value.
+    static bool seen(const char c) {
+      const uint8_t ind = LETTER_BIT(c);
+      if (ind >= COUNT(param)) return false; // Only A-Z
+      const bool b = TEST32(codebits, ind);
+      if (b) {
+        #if ENABLED(DEBUG_GCODE_PARSER)
+          if (codenum == 800) {
+            SERIAL_CHAR('\''); SERIAL_CHAR(c); SERIAL_ECHOLNPGM("' is seen");
+          }
+        #endif
+        char * const ptr = command_ptr + param[ind];
+        value_ptr = param[ind] && valid_float(ptr) ? ptr : (char*)NULL;
+      }
+      return b;
+    }
 
-  #define SEEN_TEST(L) TEST32(codebits, LETTER_BIT(L))
+    static bool seen_any() { return !!codebits; }
+
+    #define SEEN_TEST(L) TEST32(codebits, LETTER_BIT(L))
+
+  #else // !FASTER_GCODE_PARSER
+
+    // Code is found in the string. If not found, value_ptr is unchanged.
+    // This allows "if (seen('A')||seen('B'))" to use the last-found value.
+    static bool seen(const char c) {
+      char *p = strchr(command_args, c);
+      const bool b = !!p;
+      if (b) value_ptr = valid_float(&p[1]) ? &p[1] : (char*)NULL;
+      return b;
+    }
+
+    static bool seen_any() { return *command_args == '\0'; }
+
+    #define SEEN_TEST(L) !!strchr(command_args, L)
+
+  #endif // !FASTER_GCODE_PARSER
 
   // Seen any axis parameter
   static bool seen_axis() {
@@ -146,6 +181,11 @@ public:
   // Populate all fields by parsing a single line of GCode
   // This uses 54 bytes of SRAM to speed up seen/value
   static void parse(char * p);
+
+  #if ENABLED(CNC_COORDINATE_SYSTEMS)
+    // Parse the next parameter as a new command
+    static bool chain();
+  #endif
 
   // The code value pointer was set
   FORCE_INLINE static bool has_value() { return value_ptr != NULL; }
@@ -191,13 +231,93 @@ public:
 
   // Units modes: Inches, Fahrenheit, Kelvin
 
-  FORCE_INLINE static float value_linear_units()                  {            return value_float(); }
-  FORCE_INLINE static float value_axis_units(const AxisEnum a)    { UNUSED(a); return value_float(); }
-  FORCE_INLINE static float value_per_axis_unit(const AxisEnum a) { UNUSED(a); return value_float(); }
+  #if ENABLED(INCH_MODE_SUPPORT)
 
+    inline static void set_input_linear_units(const LinearUnit units) {
+      switch (units) {
+        case LINEARUNIT_INCH:
+          linear_unit_factor = 25.4;
+          break;
+        case LINEARUNIT_MM:
+        default:
+          linear_unit_factor = 1.0;
+          break;
+      }
+      volumetric_unit_factor = POW(linear_unit_factor, 3.0);
+    }
 
-  FORCE_INLINE static float value_celsius()      { return value_float(); }
-  FORCE_INLINE static float value_celsius_diff() { return value_float(); }
+    inline static float axis_unit_factor(const AxisEnum axis) {
+      return (axis >= E_AXIS && volumetric_enabled ? volumetric_unit_factor : linear_unit_factor);
+    }
+
+    inline static float value_linear_units()                     { return value_float() * linear_unit_factor; }
+    inline static float value_axis_units(const AxisEnum axis)    { return value_float() * axis_unit_factor(axis); }
+    inline static float value_per_axis_unit(const AxisEnum axis) { return value_float() / axis_unit_factor(axis); }
+
+  #else
+
+    FORCE_INLINE static float value_linear_units()                  {            return value_float(); }
+    FORCE_INLINE static float value_axis_units(const AxisEnum a)    { UNUSED(a); return value_float(); }
+    FORCE_INLINE static float value_per_axis_unit(const AxisEnum a) { UNUSED(a); return value_float(); }
+
+  #endif
+
+  #if ENABLED(TEMPERATURE_UNITS_SUPPORT)
+
+    inline static void set_input_temp_units(TempUnit units) { input_temp_units = units; }
+
+    #if ENABLED(ULTIPANEL) && DISABLED(DISABLE_M503)
+
+      FORCE_INLINE static char temp_units_code() {
+        return input_temp_units == TEMPUNIT_K ? 'K' : input_temp_units == TEMPUNIT_F ? 'F' : 'C';
+      }
+      FORCE_INLINE static const char* temp_units_name() {
+        return input_temp_units == TEMPUNIT_K ? PSTR("Kelvin") : input_temp_units == TEMPUNIT_F ? PSTR("Fahrenheit") : PSTR("Celsius");
+      }
+      inline static float to_temp_units(const float &f) {
+        switch (input_temp_units) {
+          case TEMPUNIT_F:
+            return f * 0.5555555556 + 32.0;
+          case TEMPUNIT_K:
+            return f + 273.15;
+          case TEMPUNIT_C:
+          default:
+            return f;
+        }
+      }
+
+    #endif // ULTIPANEL && !DISABLE_M503
+
+    inline static float value_celsius() {
+      const float f = value_float();
+      switch (input_temp_units) {
+        case TEMPUNIT_F:
+          return (f - 32.0) * 0.5555555556;
+        case TEMPUNIT_K:
+          return f - 273.15;
+        case TEMPUNIT_C:
+        default:
+          return f;
+      }
+    }
+
+    inline static float value_celsius_diff() {
+      switch (input_temp_units) {
+        case TEMPUNIT_F:
+          return value_float() * 0.5555555556;
+        case TEMPUNIT_C:
+        case TEMPUNIT_K:
+        default:
+          return value_float();
+      }
+    }
+
+  #else // !TEMPERATURE_UNITS_SUPPORT
+
+    FORCE_INLINE static float value_celsius()      { return value_float(); }
+    FORCE_INLINE static float value_celsius_diff() { return value_float(); }
+
+  #endif // !TEMPERATURE_UNITS_SUPPORT
 
   FORCE_INLINE static float value_feedrate() { return value_linear_units(); }
 

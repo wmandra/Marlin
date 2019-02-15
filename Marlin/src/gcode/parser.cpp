@@ -34,6 +34,14 @@
 
 bool GCodeParser::volumetric_enabled;
 
+#if ENABLED(INCH_MODE_SUPPORT)
+  float GCodeParser::linear_unit_factor, GCodeParser::volumetric_unit_factor;
+#endif
+
+#if ENABLED(TEMPERATURE_UNITS_SUPPORT)
+  TempUnit GCodeParser::input_temp_units;
+#endif
+
 char *GCodeParser::command_ptr,
      *GCodeParser::string_arg,
      *GCodeParser::value_ptr;
@@ -43,8 +51,13 @@ int GCodeParser::codenum;
   uint8_t GCodeParser::subcode;
 #endif
 
-uint32_t GCodeParser::codebits;  // found bits
-uint8_t GCodeParser::param[26];  // parameter offsets from command_ptr
+#if ENABLED(FASTER_GCODE_PARSER)
+  // Optimized Parameters
+  uint32_t GCodeParser::codebits;  // found bits
+  uint8_t GCodeParser::param[26];  // parameter offsets from command_ptr
+#else
+  char *GCodeParser::command_args; // start of parameters
+#endif
 
 // Create a global instance of the GCode parser singleton
 GCodeParser parser;
@@ -62,8 +75,10 @@ void GCodeParser::reset() {
   #if USE_GCODE_SUBCODES
     subcode = 0;                        // No command sub-code
   #endif
-  codebits = 0;                       // No codes yet
-  //ZERO(param);                      // No parameters (should be safe to comment out this line)
+  #if ENABLED(FASTER_GCODE_PARSER)
+    codebits = 0;                       // No codes yet
+    //ZERO(param);                      // No parameters (should be safe to comment out this line)
+  #endif
 }
 
 // Populate all fields by parsing a single line of GCode
@@ -77,6 +92,9 @@ void GCodeParser::parse(char *p) {
 
   // Skip N[-0-9] if included in the command line
   if (*p == 'N' && NUMERIC_SIGNED(p[1])) {
+    #if ENABLED(FASTER_GCODE_PARSER)
+      //set('N', p + 1);     // (optional) Set the 'N' parameter value
+    #endif
     p += 2;                  // skip N[-0-9]
     while (NUMERIC(*p)) ++p; // skip [0-9]*
     while (*p == ' ')   ++p; // skip [ ]*
@@ -129,6 +147,10 @@ void GCodeParser::parse(char *p) {
 
   // The command parameters (if any) start here, for sure!
 
+  #if DISABLED(FASTER_GCODE_PARSER)
+    command_args = p; // Scan for parameters in seen()
+  #endif
+
   // Only use string_arg for these M codes
   if (letter == 'M') switch (codenum) { case 23: case 28: case 30: case 117: case 118: case 928: string_arg = p; return; default: break; }
 
@@ -157,7 +179,11 @@ void GCodeParser::parse(char *p) {
     }
 
     // Arguments MUST be uppercase for fast GCode parsing
-    #define PARAM_TEST WITHIN(code, 'A', 'Z')
+    #if ENABLED(FASTER_GCODE_PARSER)
+      #define PARAM_TEST WITHIN(code, 'A', 'Z')
+    #else
+      #define PARAM_TEST true
+    #endif
 
     if (PARAM_TEST) {
 
@@ -202,6 +228,26 @@ void GCodeParser::parse(char *p) {
   }
 }
 
+#if ENABLED(CNC_COORDINATE_SYSTEMS)
+
+  // Parse the next parameter as a new command
+  bool GCodeParser::chain() {
+    #if ENABLED(FASTER_GCODE_PARSER)
+      char *next_command = command_ptr;
+      if (next_command) {
+        while (*next_command && *next_command != ' ') ++next_command;
+        while (*next_command == ' ') ++next_command;
+        if (!*next_command) next_command = NULL;
+      }
+    #else
+      const char *next_command = command_args;
+    #endif
+    if (next_command) parse(next_command);
+    return !!next_command;
+  }
+
+#endif // CNC_COORDINATE_SYSTEMS
+
 void GCodeParser::unknown_command_error() {
   SERIAL_ECHO_START();
   SERIAL_ECHOPAIR(MSG_UNKNOWN_COMMAND, command_ptr);
@@ -216,9 +262,13 @@ void GCodeParser::unknown_command_error() {
     SERIAL_ECHOPAIR(" (", command_letter);
     SERIAL_ECHO(codenum);
     SERIAL_ECHOLNPGM(")");
-    SERIAL_ECHOPGM(" args: \"");
-    for (char c = 'A'; c <= 'Z'; ++c)
-      if (seen(c)) { SERIAL_CHAR(c); SERIAL_CHAR(' '); }
+    #if ENABLED(FASTER_GCODE_PARSER)
+      SERIAL_ECHOPGM(" args: \"");
+      for (char c = 'A'; c <= 'Z'; ++c)
+        if (seen(c)) { SERIAL_CHAR(c); SERIAL_CHAR(' '); }
+    #else
+      SERIAL_ECHOPAIR(" args: \"", command_args);
+    #endif
     SERIAL_CHAR('"');
     if (string_arg) {
       SERIAL_ECHOPGM(" string: \"");

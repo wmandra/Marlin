@@ -268,10 +268,34 @@ enum ClockSource2 : char {
   #define PWM_CHK_MOTOR_CURRENT(p) false
 #endif
 
+#ifdef NUM_SERVOS
+  #if AVR_ATmega2560_FAMILY
+    #define PWM_CHK_SERVO(p) (p == 5 || (NUM_SERVOS > 12 && p == 6) || (NUM_SERVOS > 24 && p == 46))  // PWMS 3A, 4A & 5A
+  #elif AVR_ATmega2561_FAMILY
+    #define PWM_CHK_SERVO(p)   (p == 5)  // PWM3A
+  #elif AVR_ATmega1284_FAMILY
+    #define PWM_CHK_SERVO(p)   false
+  #elif AVR_AT90USB1286_FAMILY
+    #define PWM_CHK_SERVO(p)   (p == 16) // PWM3A
+  #elif AVR_ATmega328_FAMILY
+    #define PWM_CHK_SERVO(p)   false
+  #endif
+#else
+  #define PWM_CHK_SERVO(p) false
+#endif
 
-#define PWM_CHK_HEATER(p) false
+#if ENABLED(BARICUDA)
+  #if HAS_HEATER_1 && HAS_HEATER_2
+    #define PWM_CHK_HEATER(p) (p == HEATER_1_PIN || p == HEATER_2_PIN)
+  #elif HAS_HEATER_1
+    #define PWM_CHK_HEATER(p) (p == HEATER_1_PIN)
+  #endif
+#else
+    #define PWM_CHK_HEATER(p) false
+#endif
 
-#define PWM_CHK(p) (PWM_CHK_HEATER(p) || PWM_CHK_MOTOR_CURRENT(p) || PWM_CHK_FAN_A(p) || PWM_CHK_FAN_B(p))
+#define PWM_CHK(p) (PWM_CHK_HEATER(p) || PWM_CHK_SERVO(p)  || PWM_CHK_MOTOR_CURRENT(p)\
+                     || PWM_CHK_FAN_A(p) || PWM_CHK_FAN_B(p))
 
 // define which hardware PWMs are available for the current CPU
 // all timer 1 PWMS deleted from this list because they are never available
