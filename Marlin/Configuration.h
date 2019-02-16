@@ -511,9 +511,9 @@
   //#define DEFAULT_Kd 440
 
   // 50W TH3D on 13.5V
-  #define DEFAULT_Kp 16.90
-  #define DEFAULT_Ki 1.65
-  #define DEFAULT_Kd 43.28
+  #define DEFAULT_Kp 18.29
+  #define DEFAULT_Ki 1.69
+  #define DEFAULT_Kd 49.45
 
 #endif // PIDTEMP
 
