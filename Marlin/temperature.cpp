@@ -92,6 +92,9 @@ int16_t Temperature::current_temperature_raw[HOTENDS] = { 0 },
 #if HAS_AUTO_FAN
   int8_t Temperature::default_autofan_speed = EXTRUDER_AUTO_FAN_SPEED;
   int16_t Temperature::autofan_speed[HOTENDS] = { 0 };
+  #if HAS_AUTO_CHAMBER_FAN
+    int16_t Temperature::chamber_autofan_speed = 0;
+  #endif
 #endif
 
 #if FAN_COUNT > 0
@@ -150,7 +153,7 @@ int16_t Temperature::current_temperature_raw[HOTENDS] = { 0 },
 
       // Fan off if no steppers have been enabled for CONTROLLERFAN_SECS seconds
       const uint8_t speed = (lastMotorOn && PENDING(ms, lastMotorOn + (CONTROLLERFAN_SECS) * 1000UL)) ? CONTROLLERFAN_SPEED : 0;
-      
+
       #if ENABLED(AUTO_REPORT_FAN_SPEEDS)
         if (speed != controllerFanSpeed) {
           controllerFanSpeed = speed;
@@ -634,15 +637,23 @@ int Temperature::getHeaterPower(const int heater) {
       if (pin >= 0 && !TEST(fanDone, bit)) {
         uint8_t newFanSpeed = TEST(fanState, bit) ? default_autofan_speed : 0;
 
-        #if ENABLED(AUTO_REPORT_FAN_SPEEDS)
-          if (newFanSpeed != autofan_speed[f]) {
-            autofan_speed[f] = newFanSpeed;
-            report_auto_fan(f);
+        #if HAS_AUTO_CHAMBER_FAN
+          if (fanPin[f] == CHAMBER_AUTO_FAN_PIN) {
+              chamber_autofan_speed = newFanSpeed;
+              #if ENABLED(AUTO_REPORT_FANSPEEDS)
+                report_chamber_fan_speed();
+              #endif
           }
-        #else
-          autofan_speed[f] = newFanSpeed;
+          else {
         #endif
-        
+        autofan_speed[f] = newFanSpeed;
+        #if ENABLED(AUTO_REPORT_FANSPEEDS)
+          report_auto_fan(f);
+        #endif
+        #if HAS_AUTO_CHAMBER_FAN
+          } // if (fanPin[f] == CHAMBER_AUTO_FAN_PIN)
+        #endif
+
         // this idiom allows both digital and PWM fan outputs (see M42 handling).
         digitalWrite(pin, newFanSpeed);
         analogWrite(pin, newFanSpeed);
@@ -1228,6 +1239,10 @@ void Temperature::init() {
     #if ENABLED(FAST_PWM_FAN)
       setPwmFrequency(FAN2_PIN, 1); // No prescaling. Pwm frequency = F_CPU/256/8
     #endif
+  #endif
+
+  #if ENABLED(USE_CONTROLLER_FAN)
+    SET_OUTPUT(CONTROLLER_FAN_PIN); //Set pin used for driver cooling fan
   #endif
 
   #if ENABLED(HEATER_0_USES_MAX6675)

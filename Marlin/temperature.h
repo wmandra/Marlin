@@ -129,6 +129,9 @@ class Temperature {
 
     #if HAS_AUTO_FAN
       static int16_t autofan_speed[HOTENDS];
+      #if HAS_AUTO_CHAMBER_FAN
+        static int16_t chamber_autofan_speed;
+      #endif
       static int8_t default_autofan_speed;
     #endif
 
@@ -189,7 +192,7 @@ class Temperature {
       static float current_temperature_chamber;
       static int16_t current_temperature_chamber_raw;
     #endif
-    
+
     #if ENABLED(BABYSTEPPING)
       static volatile int babystepsTodo[3];
     #endif
@@ -628,20 +631,26 @@ class Temperature {
     #if FAN_COUNT > 0
       #if ENABLED(AUTO_REPORT_FANSPEEDS)
         FORCE_INLINE static void report_fan_speed(const uint8_t index) {
-          SERIAL_PROTOCOLPAIR("Fanspeed", index);
+          SERIAL_PROTOCOLPAIR("Fanspeed_", index);
           SERIAL_PROTOCOLLNPAIR(":", fanSpeeds[index]);
         }
 
         #if HAS_CONTROLLER_FAN
           FORCE_INLINE static void report_controller_fan() {
-            SERIAL_PROTOCOLLNPAIR("ControllerFanspeed:", controllerFanSpeed);
+            SERIAL_PROTOCOLLNPAIR("Fanspeed_Controller:", controllerFanSpeed);
           }
         #endif
 
         #if HAS_AUTO_FAN
           FORCE_INLINE static void report_auto_fan(const uint8_t index) {
-            SERIAL_PROTOCOLPAIR("FanspeedE", index);
+            SERIAL_PROTOCOLPAIR("Fanspeed_E", index);
             SERIAL_PROTOCOLLNPAIR(":", autofan_speed[index]);
+          }
+        #endif
+
+        #if HAS_AUTO_CHAMBER_FAN
+          FORCE_INLINE static void report_chamber_fan_speed() {
+            SERIAL_PROTOCOLLNPAIR("Fanspeed_Chamber:", chamber_autofan_speed);
           }
         #endif
       #endif
@@ -655,14 +664,22 @@ class Temperature {
           }
         #endif
         fanSpeeds[index] = speed;
-        
+
         #if ENABLED(AUTO_REPORT_FANSPEEDS)
           report_fan_speed(index);
         #endif
       }
 
       static void halt_fans() {
-        for (uint8_t i = 0; i < FAN_COUNT; i++) set_fan_speed(i, 0);
+        #if HAS_FAN0
+           set_fan_speed(0, 0);
+        #endif
+        #if HAS_FAN1
+          set_fan_speed(1, 0);
+        #endif
+        #if HAS_FAN2
+          set_fan_speed(2, 0);
+        #endif
         #if ENABLED(PROBING_FANS_OFF)
           fans_paused = false;
           ZERO(paused_fanSpeeds);
@@ -685,15 +702,31 @@ class Temperature {
         static void pause_fans(const bool p) {
           if (p != fans_paused) {
             fans_paused = p;
-            if (p)
-              for (uint8_t x = 0; x < FAN_COUNT; x++) {
-                paused_fanSpeeds[x] = fanSpeeds[x];
-                set_fan_speed(x, 0);
-             }
-            else
-              for (uint8_t x = 0; x < FAN_COUNT; x++) {
-                set_fan_speed(x, paused_fanSpeeds[x]);
-              }
+            if (p) {
+              #if HAS_FAN0
+                paused_fanSpeeds[0] = fanSpeeds[0];
+                set_fan_speed(0, 0);
+              #endif
+              #if HAS_FAN1
+                paused_fanSpeeds[1] = fanSpeeds[1];
+                set_fan_speed(1, 0);
+              #endif
+              #if HAS_FAN2
+                paused_fanSpeeds[2] = fanSpeeds[2];
+                set_fan_speed(2, 0);
+              #endif
+            }
+            else {
+              #if HAS_FAN0
+                set_fan_speed(0, paused_fanSpeeds[0]);
+              #endif
+              #if HAS_FAN1
+                set_fan_speed(1, paused_fanSpeeds[1]);
+              #endif
+              #if HAS_FAN2
+                set_fan_speed(2, paused_fanSpeeds[2]);
+              #endif
+            }
           }
         }
       #endif // PROBING_FANS_OFF
@@ -704,7 +737,7 @@ class Temperature {
         }
 
         static void set_secondary_fan_mode(const uint8_t index, const bool mode) {
-          if (mode != set_secondary_fan_mode[index]) {
+          if (mode != secondary_fan_mode[index]) {
             if (secondary_fan_mode[index]) {
               set_fan_speed(index, primary_fanSpeeds[index]);
               secondary_fan_mode[index] = false;
@@ -716,6 +749,7 @@ class Temperature {
         }
       #endif
     #endif
+
     #if HAS_CONTROLLER_FAN
       static void controllerFan();
     #endif

@@ -8306,7 +8306,7 @@ inline void gcode_M105() {
         if (t > 0) {
           switch (t) {
             case 1: // use primary speed
-              thermalManager.set_secondary_fan_mode(p, false); 
+              thermalManager.set_secondary_fan_mode(p, false);
               break;
             case 2: //use secondary speed
               thermalManager.set_secondary_fan_mode(p, true);
@@ -15101,10 +15101,6 @@ void setup() {
     endstops.enable_z_probe(false);
   #endif
 
-  #if ENABLED(USE_CONTROLLER_FAN)
-    SET_OUTPUT(CONTROLLER_FAN_PIN); //Set pin used for driver cooling fan
-  #endif
-
   #if HAS_STEPPER_RESET
     enableStepperDrivers();
   #endif
@@ -15155,7 +15151,7 @@ void setup() {
   #if HAS_FANMUX
     fanmux_init();
   #endif
-  
+
   lcd_init();
   lcd_reset_status();
 
