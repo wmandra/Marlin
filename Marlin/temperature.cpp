@@ -638,7 +638,7 @@ int Temperature::getHeaterPower(const int heater) {
         uint8_t newFanSpeed = TEST(fanState, bit) ? default_autofan_speed : 0;
 
         #if HAS_AUTO_CHAMBER_FAN
-          if (fanPin[f] == CHAMBER_AUTO_FAN_PIN) {
+          if (pin == CHAMBER_AUTO_FAN_PIN) {
               chamber_autofan_speed = newFanSpeed;
               #if ENABLED(AUTO_REPORT_FANSPEEDS)
                 report_chamber_fan_speed();
